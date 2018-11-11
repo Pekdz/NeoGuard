@@ -20,6 +20,8 @@
     <string name="vpn_off">OFF</string>
     <string name="leak_singular">leak</string>
     <string name="leak_plural">leaks</string>
+    <string name="trace_singular">trace</string>
+    <string name="traces_plural">traces</string>
     <string name="settings">Settings</string>
     <string name="permissions_not_granted_message">To use PrivacyGuard, you need to turn on all permissions that it requires.\n\nFor example, if PrivacyGuard cannot learn your location, it cannot look for leaks of your location in traffic that is leaving your device.\n\nPrivacyGuard uses the information that you grant it access to only locally and does not transmit it to remote entities.</string>
     <string name="delete_package_title">Delete Application Data</string>
@@ -58,6 +60,10 @@
     <string name="time_label_colon">Time:</string>
     <string name="content_label_colon">Content:</string>
     <string name="status_label_colon">Status:</string>
+
+    <!-- URLTrace -->
+    <string name="url_label">URI</string>
+    <string name="host_label">Host</string>
 
     <!-- Leak Categories -->
     <string name="location_category">Location</string>

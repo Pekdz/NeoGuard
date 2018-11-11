@@ -7,27 +7,27 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import ca.uwaterloo.crysp.privacyguard.Application.Database.DataLeak;
-import ca.uwaterloo.crysp.privacyguard.Application.Database.ReportItem;
-import ca.uwaterloo.crysp.privacyguard.R;
-
 import java.util.List;
+
+import ca.uwaterloo.crysp.privacyguard.Application.Database.DataLeak;
+import ca.uwaterloo.crysp.privacyguard.Application.Database.URLTrace;
+import ca.uwaterloo.crysp.privacyguard.R;
 
 /**
  * Created by justinhu on 16-03-13.
  */
-public class DetailListViewAdapter extends BaseAdapter {
+public class DetailUrlListViewAdapter extends BaseAdapter {
     private final Context context;
-    private List<DataLeak> list;
+    private List<URLTrace> list;
 
-    public DetailListViewAdapter(Context context, List<DataLeak> list) {
+    public DetailUrlListViewAdapter(Context context, List<URLTrace> list) {
         super();
         this.context = context;
         this.list = list;
 
     }
 
-    public void updateData(List<DataLeak> list) {
+    public void updateData(List<URLTrace> list) {
         this.list = list;
         this.notifyDataSetChanged();
     }
@@ -53,31 +53,28 @@ public class DetailListViewAdapter extends BaseAdapter {
         if (convertView == null) {
             LayoutInflater inflater = (LayoutInflater) context
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = inflater.inflate(R.layout.listview_detail, null);
+            convertView = inflater.inflate(R.layout.listview_detail_url, null);
             holder = new ViewHolder();
 
-            holder.type = (TextView) convertView.findViewById(R.id.detail_type);
+            holder.resource = (TextView) convertView.findViewById(R.id.detail_url);
             holder.time = (TextView) convertView.findViewById(R.id.detail_time);
-            //holder.content = (TextView) convertView.findViewById(R.id.detail_content);
-            holder.destination = (TextView) convertView.findViewById(R.id.detail_destination);
+            holder.host = (TextView) convertView.findViewById(R.id.detail_host);
 
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
 
-        DataLeak leak = list.get(position);
-        holder.type.setText(leak.getType());
-        holder.time.setText(leak.getTimestamp());
-        //holder.content.setText(leak.getLeakContent());
-        holder.destination.setText(leak.getDestination());
+        URLTrace url = list.get(position);
+        holder.resource.setText(url.getRes());
+        holder.time.setText(url.getTimestamp());
+        holder.host.setText(url.getHost());
         return convertView;
     }
 
     public static class ViewHolder {
-        public TextView type;
-        //public TextView content;
+        public TextView host;
+        public TextView resource;
         public TextView time;
-        public TextView destination;
     }
 }

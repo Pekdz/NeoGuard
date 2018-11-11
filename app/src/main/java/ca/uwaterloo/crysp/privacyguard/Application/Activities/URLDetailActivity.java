@@ -3,7 +3,6 @@ package ca.uwaterloo.crysp.privacyguard.Application.Activities;
 import android.app.TaskStackBuilder;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
@@ -13,89 +12,73 @@ import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import ca.uwaterloo.crysp.privacyguard.Application.Database.CategorySummary;
+import java.util.List;
+
 import ca.uwaterloo.crysp.privacyguard.Application.Database.DatabaseHandler;
+import ca.uwaterloo.crysp.privacyguard.Application.Database.URLTrace;
+import ca.uwaterloo.crysp.privacyguard.Application.Logger;
 import ca.uwaterloo.crysp.privacyguard.Application.PrivacyGuard;
 import ca.uwaterloo.crysp.privacyguard.R;
 
-import java.util.List;
+/**
+ * Created by justinhu on 16-03-11.
+ */
+public class URLDetailActivity extends AppCompatActivity {
 
-public class AppSummaryActivity extends AppCompatActivity {
-
+    private int notifyId;
     private String packageName;
     private String appName;
+    private String category;
     private int ignore;
+
     private ListView list;
-    private SummaryListViewAdapter adapter;
+    private DetailUrlListViewAdapter adapter;
     private Switch notificationSwitch;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        setContentView(R.layout.activity_app_summary);
+        setContentView(R.layout.activity_detail);
 
         // Get the message from the intent
         Intent intent = getIntent();
-        packageName= intent.getStringExtra(PrivacyGuard.EXTRA_PACKAGE_NAME);
+        notifyId = intent.getIntExtra(PrivacyGuard.EXTRA_ID, -1);
+        packageName = intent.getStringExtra(PrivacyGuard.EXTRA_PACKAGE_NAME);
         appName = intent.getStringExtra(PrivacyGuard.EXTRA_APP_NAME);
-        ignore = intent.getIntExtra(PrivacyGuard.EXTRA_IGNORE,0);
+        category = intent.getStringExtra(PrivacyGuard.EXTRA_CATEGORY);
+        ignore = intent.getIntExtra(PrivacyGuard.EXTRA_IGNORE, 0);
 
-        TextView title = (TextView) findViewById(R.id.summary_title);
-        title.setText(appName);
-        TextView subtitle = (TextView) findViewById(R.id.summary_subtitle);
-        subtitle.setText("[" + packageName + "]");
+        TextView title = (TextView) findViewById(R.id.detail_title);
+        title.setText(category);
+        TextView subtitle = (TextView) findViewById(R.id.detail_subtitle);
+        subtitle.setText("[" + appName + "]");
 
-        notificationSwitch = (Switch) findViewById(R.id.summary_switch);
+
+        notificationSwitch = (Switch) findViewById(R.id.detail_switch);
         notificationSwitch.setChecked(ignore == 1);
         notificationSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                DatabaseHandler db = DatabaseHandler.getInstance(AppSummaryActivity.this);
+                DatabaseHandler db = DatabaseHandler.getInstance(URLDetailActivity.this);
                 if (isChecked) {
                     // The toggle is enabled
-                    db.setIgnoreApp(packageName, true);
+                    db.setIgnoreAppCategory(notifyId, true);
                     ignore = 1;
                 } else {
                     // The toggle is disabled
-                    db.setIgnoreApp(packageName, false);
+                    db.setIgnoreAppCategory(notifyId, false);
                     ignore = 0;
                 }
             }
         });
 
-        list = (ListView) findViewById(R.id.summary_list);
+
+        list = (ListView) findViewById(R.id.detail_list);
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                CategorySummary category = (CategorySummary) parent.getItemAtPosition(position);
-                Intent intent;
-                if(category.category.equalsIgnoreCase("location")){
-                    intent = new Intent(AppSummaryActivity.this, LocationDetailActivity.class);
-                } else if (category.category.equalsIgnoreCase("url")) {
-                    intent = new Intent(AppSummaryActivity.this, URLDetailActivity.class);
-                } else{
-                    intent = new Intent(AppSummaryActivity.this, DetailActivity.class);
-                }
-
-                intent.putExtra(PrivacyGuard.EXTRA_ID, category.notifyId);
-                intent.putExtra(PrivacyGuard.EXTRA_PACKAGE_NAME, packageName);
-                intent.putExtra(PrivacyGuard.EXTRA_APP_NAME, appName);
-                intent.putExtra(PrivacyGuard.EXTRA_CATEGORY, category.category);
-                intent.putExtra(PrivacyGuard.EXTRA_IGNORE, category.ignore);
-
-                startActivity(intent);
-            }
-        });
-
-        FloatingActionButton viewStats = (FloatingActionButton)findViewById(R.id.stats_button);
-        viewStats.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent i = new Intent(getApplicationContext(), AppDataActivity.class);
-                i.putExtra(AppDataActivity.APP_NAME_INTENT, appName);
-                i.putExtra(AppDataActivity.APP_PACKAGE_INTENT, packageName);
-                startActivity(i);
+                URLTrace url = (URLTrace) parent.getItemAtPosition(position);
             }
         });
     }
@@ -107,15 +90,23 @@ public class AppSummaryActivity extends AppCompatActivity {
         updateList();
     }
 
-    private void updateList(){
+    private void updateList() {
         DatabaseHandler db = DatabaseHandler.getInstance(this);
-        List<CategorySummary> details = db.getAppDetail(packageName);
+        List<URLTrace> details = db.getUrlTraces(packageName);
 
         if (details == null) {
             return;
         }
+
         if (adapter == null) {
-            adapter = new SummaryListViewAdapter(this, details);
+            adapter = new DetailUrlListViewAdapter(this, details);
+
+            View header = getLayoutInflater().inflate(R.layout.listview_detail_url, null);
+            ((TextView) header.findViewById(R.id.detail_host)).setText(R.string.host_label);
+            ((TextView) header.findViewById(R.id.detail_time)).setText(R.string.time_label);
+            ((TextView) header.findViewById(R.id.detail_url)).setText(R.string.url_label);
+
+            list.addHeaderView(header);
             list.setAdapter(adapter);
         } else {
             adapter.updateData(details);

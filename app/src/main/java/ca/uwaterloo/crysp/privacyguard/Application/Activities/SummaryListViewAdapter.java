@@ -68,7 +68,14 @@ public class SummaryListViewAdapter extends BaseAdapter {
         CategorySummary category = list.get(position);
         holder.category.setText(category.category);
         holder.count.setText(String.valueOf(category.count));
-        holder.countString.setText(category.count == 1 ? R.string.leak_singular : R.string.leak_plural);
+        // data leaks
+        if (!category.category.equals("URL")) {
+            holder.countString.setText(category.count == 1 ? R.string.leak_singular : R.string.leak_plural);
+        }
+        // tracing
+        else {
+            holder.countString.setText(category.count == 1 ? R.string.trace_singular : R.string.traces_plural);
+        }
 
         if (category.ignore == 0) {
             holder.ignore.setVisibility(View.INVISIBLE);

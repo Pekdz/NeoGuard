@@ -3,14 +3,9 @@ package ca.uwaterloo.crysp.privacyguard.Application.Database;
 import java.text.ParseException;
 import java.util.Date;
 
-public class DataLeak {
-
-    private String packageName;
-    private String appName;
-    private String category;
+public class DataLeak extends ReportItem {
     private String type;
     private String leakContent;
-    private String timestamp;
     private Date timestampDate;
     private int foregroundStatus;
     private String destination;
@@ -33,17 +28,7 @@ public class DataLeak {
         }
     }
 
-    public String getPackageName() {
-        return packageName;
-    }
 
-    public String getAppName() {
-        return appName;
-    }
-
-    public String getCategory() {
-        return category;
-    }
 
     public String getType() {
         return type;
@@ -51,10 +36,6 @@ public class DataLeak {
 
     public String getLeakContent() {
         return leakContent;
-    }
-
-    public String getTimestamp() {
-        return timestamp;
     }
 
     public Date getTimestampDate() {

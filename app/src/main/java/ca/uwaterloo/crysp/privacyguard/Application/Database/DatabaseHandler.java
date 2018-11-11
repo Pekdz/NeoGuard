@@ -429,6 +429,15 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             }
             cursor.close();
         }
+        // Trace Report
+        Cursor mCount = mDB.rawQuery("select count(*) from " + TABLE_URL + " where " + KEY_URL_PACKAGE + "='" + packageName + "'", null);
+        if (cursor != null) {
+            mCount.moveToFirst();
+            int count = mCount.getInt(0);
+            mCount.close();
+            categories.add(new CategorySummary(100, "URL", count, 1));
+        }
+
         return categories;
     }
 
@@ -476,6 +485,23 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         }
         // return contact list
         return leakList;
+    }
+
+    public List<URLTrace> getUrlTraces(String packageName) {
+        List<URLTrace> urlList = new ArrayList<>();
+        Cursor cursor = mDB.query(TABLE_URL, new String[]{KEY_URL_PACKAGE, KEY_URL_APP_NAME, KEY_URL_URL, KEY_URL_QUERY_PARAMS, KEY_URL_HOST, KEY_URL_RES, KEY_URL_TIMESTAMP},
+                KEY_PACKAGE + "=?", new String[]{packageName},
+                null, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                do {
+                    URLTrace leak = new URLTrace(cursor.getString(0), cursor.getString(1), "URL", cursor.getString(2), cursor.getString(3), cursor.getString(4), cursor.getString(5), cursor.getString(6));
+                    urlList.add(leak);
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
+        }
+        return urlList;
     }
 
     // w3kim@uwaterloo.ca : simple helper

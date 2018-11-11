@@ -287,7 +287,7 @@ public class MyVpnService extends VpnService implements Runnable {
 
         // w3kim@uwaterloo.ca
         // disabled since we don't seem to be doing anything with this recorded information
-        //db.addUrlIfAny(leak.appName, leak.packageName, request);
+        db.addUrlIfAny(leak.metaData.appName, leak.metaData.packageName, request);
 
         int notifyId = db.findNotificationId(leak);
         if (notifyId < 0) {

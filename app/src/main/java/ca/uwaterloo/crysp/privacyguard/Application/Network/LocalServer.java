@@ -93,6 +93,7 @@ public class LocalServer extends Thread {
                 descriptor = vpnService.getClientAppResolver().getClientDescriptorByPort(client.getPort());
                 target.connect(new InetSocketAddress(descriptor.getRemoteAddress(), descriptor.getRemotePort()));
 
+                boolean isPlain = true;
                 if(descriptor != null && descriptor.getRemotePort() == SSLPort) {
 
                     if (!tlsWhiteList.contains(descriptor.getRemoteAddress(), packageName)) {
@@ -126,10 +127,11 @@ public class LocalServer extends Thread {
                             return;
                         }
                     } else {
+                        isPlain = false;
                         if (DEBUG) Logger.d(TAG, "Skipping TLS interception for " + descriptor.getRemoteAddress() + ":" + descriptor.getRemotePort() + " due to whitelisting");
                     }
                 }
-                LocalServerForwarder.connect(client, target, vpnService, packageName, appName);
+                LocalServerForwarder.connect(client, target, vpnService, packageName, appName, isPlain);
             } catch (Exception e) {
                 e.printStackTrace();
             }

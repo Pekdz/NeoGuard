@@ -3,6 +3,7 @@ package ca.uwaterloo.crysp.privacyguard.Plugin;
 import android.content.Context;
 
 import ca.uwaterloo.crysp.privacyguard.Application.Logger;
+import ca.uwaterloo.crysp.privacyguard.Application.Network.ConnectionMetaData;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,7 +31,7 @@ public class KeywordDetection implements IPlugin {
     }
 
     @Override
-    public LeakReport handleRequest(String request) {
+    public LeakReport handleRequest(String request, byte[] rawRequest, ConnectionMetaData metaData) {
         ArrayList<LeakInstance> leaks = new ArrayList<>();
 
         for (String keyword : keywords) {

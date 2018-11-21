@@ -10,6 +10,7 @@ import android.support.annotation.Nullable;
 import android.provider.ContactsContract;
 
 import ca.uwaterloo.crysp.privacyguard.Application.Logger;
+import ca.uwaterloo.crysp.privacyguard.Application.Network.ConnectionMetaData;
 import ca.uwaterloo.crysp.privacyguard.Utilities.StringUtil;
 
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ public class ContactDetection implements IPlugin {
 
     @Override
     @Nullable
-    public LeakReport handleRequest(String request) {
+    public LeakReport handleRequest(String request, byte[] rawRequest, ConnectionMetaData metaData) {
         ArrayList<LeakInstance> leaks = new ArrayList<>();
 
         // don't do regex based search for email/phone since this would assume that a) we can define such regex and

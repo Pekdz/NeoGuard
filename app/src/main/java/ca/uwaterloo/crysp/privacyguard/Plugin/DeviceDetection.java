@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.annotation.Nullable;
 import android.telephony.TelephonyManager;
 
+import ca.uwaterloo.crysp.privacyguard.Application.Network.ConnectionMetaData;
 import ca.uwaterloo.crysp.privacyguard.Utilities.HashHelpers;
 import ca.uwaterloo.crysp.privacyguard.Application.Logger;
 
@@ -26,7 +27,7 @@ public class DeviceDetection implements IPlugin {
 
     @Override
     @Nullable
-    public LeakReport handleRequest(String request) {
+    public LeakReport handleRequest(String request, byte[] rawRequest, ConnectionMetaData metaData) {
         ArrayList<LeakInstance> leaks = new ArrayList<>();
         for(String key : nameofValue.keySet()) {
             if (request.contains(key)){

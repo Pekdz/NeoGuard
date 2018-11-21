@@ -5,6 +5,7 @@ public class ReportItem {
     String appName;
     String category;
     String timestamp;
+    long refPacketId;
 
     public String getPackageName() {
         return packageName;
@@ -20,5 +21,9 @@ public class ReportItem {
 
     public String getTimestamp() {
         return timestamp;
+    }
+
+    public long getRefPacketId() {
+        return refPacketId;
     }
 }

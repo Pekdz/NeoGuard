@@ -43,10 +43,10 @@ public class DomainDetection implements IPlugin {
                                 + "\nURI => " + uri.toString()
                                 + "\nAuth => " + uri.getAuthority()
                                 + "\nPath => " + uri.getPath()
-                                + "\nQuery => " + uri.getQuery()
-                                + "\nFrag => " + uri.getFragment()
-                                + "\nUpgrade => " + httpReq.getHeaders().getFirst("Upgrade").toString()
-                                + "\nUserAgent => " + httpReq.getHeaders().getFirst("User-Agent").toString()
+                                //+ "\nQuery => " + uri.getQuery()
+                                //+ "\nFrag => " + uri.getFragment()
+                                //+ "\nUpgrade => " + httpReq.getHeaders().getFirst("Upgrade").toString()
+                                //+ "\nUserAgent => " + httpReq.getHeaders().getFirst("User-Agent").toString()
                                 + "\nBody => " + payload
                                 + "\n===========\n");
                     }

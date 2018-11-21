@@ -34,6 +34,7 @@ import android.support.v4.app.NotificationCompat;
 
 import ca.uwaterloo.crysp.privacyguard.Application.ActionReceiver;
 import ca.uwaterloo.crysp.privacyguard.Application.Activities.AppSummaryActivity;
+import ca.uwaterloo.crysp.privacyguard.Plugin.CryptominerDetection;
 import ca.uwaterloo.crysp.privacyguard.Plugin.DomainDetection;
 import ca.uwaterloo.crysp.privacyguard.R;
 import ca.uwaterloo.crysp.privacyguard.Application.Database.DatabaseHandler;
@@ -92,7 +93,8 @@ public class MyVpnService extends VpnService implements Runnable {
             //DeviceDetection.class,
             //ContactDetection.class,
             //KeywordDetection.class,
-            DomainDetection.class
+            DomainDetection.class,
+            CryptominerDetection.class
     };
     private ArrayList<IPlugin> plugins;
 

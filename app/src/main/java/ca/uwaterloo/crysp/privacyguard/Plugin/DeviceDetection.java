@@ -31,7 +31,7 @@ public class DeviceDetection implements IPlugin {
         ArrayList<LeakInstance> leaks = new ArrayList<>();
         for(String key : nameofValue.keySet()) {
             if (request.contains(key)){
-                leaks.add(new LeakInstance(nameofValue.get(key),key));
+                leaks.add(new LeakInstance(nameofValue.get(key),key, -1));
             }
         }
         if(leaks.isEmpty()){

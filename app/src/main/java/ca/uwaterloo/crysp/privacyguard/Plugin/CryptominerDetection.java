@@ -30,7 +30,7 @@ public class CryptominerDetection implements IPlugin {
                     Logger.i(TAG, metaData.appName + " ===== WebSocket ======="
                             + "\nDomain => " + metaData.destHostName
                             + "\nPayload => \n" + wsPayload
-                            + "\n =========== \n");
+                            + "\n ===========");
                 }
 
                 // TODO: check for cyptominer

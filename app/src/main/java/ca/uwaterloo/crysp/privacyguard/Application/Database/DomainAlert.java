@@ -4,10 +4,10 @@ package ca.uwaterloo.crysp.privacyguard.Application.Database;
 public class DomainAlert extends ReportItem {
     private String domain;
     private String isDGA;
-    private double reputationScore;
+    private String reputationScore;
 
     public DomainAlert(String packageName, String appName, String category,
-                       String domain, String isDGA, double reputationScore,
+                       String domain, String isDGA, String reputationScore,
                        String timestamp, long refPacketId){
         this.packageName = packageName;
         this.appName = appName;
@@ -27,7 +27,7 @@ public class DomainAlert extends ReportItem {
         return isDGA;
     }
 
-    public double getReputationScore() {
+    public String getReputationScore() {
         return reputationScore;
     }
 }

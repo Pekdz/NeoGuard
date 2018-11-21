@@ -62,7 +62,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     public String[] getTables() {
-        return new String[]{TABLE_DATA_LEAKS, TABLE_LEAK_SUMMARY, TABLE_URL, TABLE_APP_STATUS_EVENTS, CREATE_TRAFFIC_TABLE};
+        return new String[]{TABLE_DATA_LEAKS, TABLE_LEAK_SUMMARY, TABLE_URL, TABLE_APP_STATUS_EVENTS,
+                TABLE_TRAFFIC_SUMMARY, TABLE_CRYPTO_ALERT, TABLE_DOMAIN_ALERT, TABLE_PACKET};
     }
 
     public static SimpleDateFormat getDateFormat() {
@@ -94,6 +95,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         // w3kim@uwaterloo.ca
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_URL);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_TRAFFIC_SUMMARY);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_PACKET);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_DOMAIN_ALERT);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_CRYPTO_ALERT);
         // Create tables again
         onCreate(db);
     }
@@ -214,7 +218,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             + KEY_DOMAIN_DOMAIN + " TEXT,"
             + KEY_DOMAIN_ISDGA + " TEXT,"
             + KEY_TIME_STAMP + " TEXT,"
-            + KEY_DOMAIN_SCORE + " REAL)";
+            + KEY_DOMAIN_SCORE + " TEXT)";
 
     // Cyptominer alert table
     private static final String TABLE_CRYPTO_ALERT = "crypto_alerts";
@@ -444,7 +448,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(KEY_DOMAIN_DOMAIN, domain);
         String isDGAstr = isDGA ? "Yes" : "No";
         values.put(KEY_DOMAIN_ISDGA, isDGAstr);
-        values.put(KEY_DOMAIN_SCORE, score);
+        values.put(KEY_DOMAIN_SCORE, Double.toString(score));
         values.put(KEY_TIME_STAMP, time);
         values.put(KEY_REFPACKET_ID, refPacketId);
 
@@ -617,7 +621,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         if (cursor != null) {
             if (cursor.moveToFirst()) {
                 do {
-                    DomainAlert alert = new DomainAlert(cursor.getString(0), cursor.getString(1), "DOMAIN", cursor.getString(2), cursor.getString(3), cursor.getDouble(4), cursor.getString(5), cursor.getLong(6));
+                    DomainAlert alert = new DomainAlert(cursor.getString(0), cursor.getString(1), "DOMAIN", cursor.getString(2), cursor.getString(3), cursor.getString(4), cursor.getString(5), cursor.getLong(6));
                     domainAlerts.add(alert);
                 } while (cursor.moveToNext());
             }

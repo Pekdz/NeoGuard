@@ -26,7 +26,7 @@ public class PacketRecord {
         this.query = query;
         this.fragment = fragment;
         this.payload = payload;
-        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        SimpleDateFormat formatter = new SimpleDateFormat("MM/dd HH:mm:ss");
         this.time = formatter.format(new Date());
     }
 }

@@ -39,12 +39,12 @@ public class ContactDetection implements IPlugin {
         // b) app implementators ensure that their phone numbers/email addresses follow these regex
         for (String phoneNumber: phoneList) {
             if (request.contains(phoneNumber)) {
-                leaks.add(new LeakInstance("Contact Phone Number", phoneNumber));
+                leaks.add(new LeakInstance("Contact Phone Number", phoneNumber, -1));
             }
         }
         for (String email: emailList) {
             if (request.contains(email)) {
-                leaks.add(new LeakInstance("Contact Email Address", email));
+                leaks.add(new LeakInstance("Contact Email Address", email, -1));
             }
         }
 

@@ -97,5 +97,6 @@
     <string name="end_date">End Date:</string>
     <string name="certificate_root_store">Cannot inspect encrypted traffic</string>
     <string name="certificate_root_store_msg">In order for PrivacyGuard to inspect encrypted traffic, it needs to add a certificate to your device\'s certificate store. This requires that you enter your device\'s PIN and click the \"OK\" button when asked to name the certificate.</string>
+    <string name="title_activity_packet_details">PacketDetails</string>
 
 </resources>

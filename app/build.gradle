@@ -18,7 +18,7 @@ android {
     }
     productFlavors {
     }
-    buildToolsVersion '28.0.2'
+    buildToolsVersion '28.0.3'
 }
 
 dependencies {
@@ -37,4 +37,5 @@ dependencies {
     implementation 'com.android.support:design:26.1.0'
     implementation 'com.google.android.gms:play-services-maps:10.2.4'
     implementation 'com.androidplot:androidplot-core:1.5.1'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
 }

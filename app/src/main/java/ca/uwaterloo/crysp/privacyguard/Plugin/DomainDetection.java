@@ -36,31 +36,32 @@ public class DomainDetection implements IPlugin {
                     if (httpReq.getBody().isPresent())
                         payload = httpReq.getBody().get().decodeBodyToString(Charset.forName("UTF-8"));
 
+                    boolean isDGA = DGADetector.getInstance().isDGA(uri.getAuthority());
+                    // TODO: check domain reputation & DGA
+                    double reputationScore = 0;
+
                     if (DEBUG) {
                         Logger.i(TAG, metaData.appName + " ===== HTTP Request ======\n "
-                                + "Destination: " + metaData.destIP + ":" + metaData.destPort + "\n"
-                                + httpReq.getStartLine().toString()
+                                //+ "Destination: " + metaData.destIP + ":" + metaData.destPort + "\n"
                                 + "\nURI => " + uri.toString()
-                                + "\nAuth => " + uri.getAuthority()
-                                + "\nPath => " + uri.getPath()
+                                //+ "\nAuth => " + uri.getAuthority()
+                                //+ "\nPath => " + uri.getPath()
                                 //+ "\nQuery => " + uri.getQuery()
                                 //+ "\nFrag => " + uri.getFragment()
                                 //+ "\nUpgrade => " + httpReq.getHeaders().getFirst("Upgrade").toString()
                                 //+ "\nUserAgent => " + httpReq.getHeaders().getFirst("User-Agent").toString()
                                 + "\nBody => " + payload
                                 + "\n===========\n");
+
+                        Logger.i(TAG, metaData.appName + " ==== Domain Result =====\n"
+                                + "isDGA => " + isDGA + ", score => " + reputationScore + "\n");
                     }
 
-
-                    // TODO: check domain reputation & DGA
-                    boolean isDGA = true;
-                    double reputationScore = 0.6;
-
-                    if (isDGA) {
+                    if (isDGA || reputationScore > 0.6) {
                         // check packet record isn't saved to database
                         if (metaData.currentPacket == null) {
                             metaData.currentPacket = db.addPacketRecord(new PacketRecord(uri.getAuthority(),
-                                    metaData.destIP, metaData.destPort, "HTTP-" + httpReq.getMethod(),
+                                    metaData.destIP, metaData.destPort, "HTTP - " + httpReq.getMethod(),
                                     uri.getPath(), uri.getQuery(), uri.getFragment(), payload));
                         }
                         LeakInstance leak = new DomainInstance("Suspicious Domain", uri.getAuthority(),

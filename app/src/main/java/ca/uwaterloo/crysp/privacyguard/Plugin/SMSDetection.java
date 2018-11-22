@@ -14,8 +14,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ca.uwaterloo.crysp.privacyguard.Application.Logger;
+import ca.uwaterloo.crysp.privacyguard.Application.Network.ConnectionMetaData;
 
-public class SMSDetect implements IPlugin {
+public class SMSDetection implements IPlugin {
     private final String TAG = "SMSDetection";
     private final boolean DEBUG = false;
     private static boolean init = false;
@@ -38,13 +39,13 @@ public class SMSDetect implements IPlugin {
 
     @Override
     @Nullable
-    public LeakReport handleRequest(String request) {
+    public LeakReport handleRequest(String request, byte[] rawRequest, ConnectionMetaData metaData) {
         ArrayList<LeakInstance> leaks = new ArrayList<>();
 
         for(String sms: smsList) {
             String sms_code = generateCode(sms);
             if (request.contains(sms_code)) {
-                leaks.add(new LeakInstance("Leak sms verification code", sms_code));
+                leaks.add(new LeakInstance("Leak sms verification code", sms_code, -1));
             }
         }
         if(leaks.isEmpty()){

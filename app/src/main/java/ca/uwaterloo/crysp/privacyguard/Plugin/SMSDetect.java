@@ -1,4 +1,4 @@
-package com.myapp.cryptominer;
+package ca.uwaterloo.crysp.privacyguard.Plugin;
 
 import java.util.ArrayList;
 import java.util.HashSet;

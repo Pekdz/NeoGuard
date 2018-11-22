@@ -1,4 +1,4 @@
-package com.myapp.cryptominer;
+package ca.uwaterloo.crysp.privacyguard.Plugin;
 
 import org.json.JSONException;
 import org.json.JSONObject;

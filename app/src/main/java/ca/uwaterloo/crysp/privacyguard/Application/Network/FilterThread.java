@@ -26,35 +26,35 @@ public class FilterThread extends Thread {
         this.metaData = metaData;
     }
 
-    public void offer(String msg, ConnectionMetaData metaData) {
-        FilterMsg filterData = new FilterMsg(msg, metaData);
+    public void offer(byte[] payload, ConnectionMetaData metaData) {
+        FilterMsg filterData = new FilterMsg(payload, metaData);
         toFilter.offer(filterData);
     }
 
-    public void filter(String msg) {
-        filter(msg, metaData);
+    public void filter(byte[] payload) {
+        filter(payload, metaData);
     }
 
-    public void filter(String msg, ConnectionMetaData metaData) {
-
+    public void filter(byte[] payload, ConnectionMetaData metaData) {
+        String payloadStr = new String(payload);
         TrafficReport traffic;
         TrafficRecord record = vpnService.getTrafficRecord();
-        traffic = record.handle(msg);
+        traffic = record.handle(payloadStr);
 
         if(traffic != null){
             traffic.metaData = metaData;
             vpnService.addtotraffic(traffic);
         }
-
+        // for each outgoing packet
         if(metaData.outgoing) {
-
-            Logger.logTraffic(metaData, msg);
-
+            metaData.currentPacket = null; // reset for different plugin referenced packet
+            Logger.logTraffic(metaData, payloadStr);
+            // inspect by each plugin
             for (IPlugin plugin : vpnService.getNewPlugins()) {
-                LeakReport leak = plugin.handleRequest(msg);
+                LeakReport leak = plugin.handleRequest(payloadStr, payload, metaData);
                 if (leak != null) {
                     leak.metaData = metaData;
-                    vpnService.notify(msg, leak);
+                    vpnService.notify(payloadStr, leak);
                     if (DEBUG) Logger.v(TAG, metaData.appName + " is leaking " + leak.category.name());
                     Logger.logLeak(leak.category.name());
                 }
@@ -66,7 +66,7 @@ public class FilterThread extends Thread {
         try {
             while (!interrupted()) {
                 FilterMsg temp = toFilter.take();
-                filter(temp.msg, temp.metaData);
+                filter(temp.payload, temp.metaData);
             }
         } catch (InterruptedException e) {
             //e.printStackTrace();
@@ -75,10 +75,10 @@ public class FilterThread extends Thread {
 
     class FilterMsg {
         ConnectionMetaData metaData;
-        String msg;
+        byte[] payload;
 
-        FilterMsg(String msg, ConnectionMetaData metaData) {
-            this.msg = msg;
+        FilterMsg(byte[] payload, ConnectionMetaData metaData) {
+            this.payload = payload;
             this.metaData = metaData;
         }
     }

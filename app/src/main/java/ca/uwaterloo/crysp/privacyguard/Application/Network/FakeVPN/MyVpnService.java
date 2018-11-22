@@ -34,6 +34,7 @@ import android.support.v4.app.NotificationCompat;
 
 import ca.uwaterloo.crysp.privacyguard.Application.ActionReceiver;
 import ca.uwaterloo.crysp.privacyguard.Application.Activities.AppSummaryActivity;
+import ca.uwaterloo.crysp.privacyguard.Plugin.DomainDetection;
 import ca.uwaterloo.crysp.privacyguard.R;
 import ca.uwaterloo.crysp.privacyguard.Application.Database.DatabaseHandler;
 import ca.uwaterloo.crysp.privacyguard.Application.Logger;
@@ -43,12 +44,8 @@ import ca.uwaterloo.crysp.privacyguard.Application.Network.LocalServer;
 import ca.uwaterloo.crysp.privacyguard.Application.Network.Resolver.MyClientResolver;
 import ca.uwaterloo.crysp.privacyguard.Application.Network.Resolver.MyNetworkHostNameResolver;
 import ca.uwaterloo.crysp.privacyguard.Application.PrivacyGuard;
-import ca.uwaterloo.crysp.privacyguard.Plugin.ContactDetection;
 import ca.uwaterloo.crysp.privacyguard.Plugin.IPlugin;
-import ca.uwaterloo.crysp.privacyguard.Plugin.KeywordDetection;
 import ca.uwaterloo.crysp.privacyguard.Plugin.LeakReport;
-import ca.uwaterloo.crysp.privacyguard.Plugin.LocationDetection;
-import ca.uwaterloo.crysp.privacyguard.Plugin.DeviceDetection;
 import ca.uwaterloo.crysp.privacyguard.Plugin.TrafficRecord;
 import ca.uwaterloo.crysp.privacyguard.Plugin.TrafficReport;
 
@@ -91,10 +88,11 @@ public class MyVpnService extends VpnService implements Runnable {
 
     // Plugin
     private Class pluginClass[] = {
-            LocationDetection.class,
-            DeviceDetection.class,
-            ContactDetection.class,
-            KeywordDetection.class
+            //LocationDetection.class,
+            //DeviceDetection.class,
+            //ContactDetection.class,
+            //KeywordDetection.class,
+            DomainDetection.class
     };
     private ArrayList<IPlugin> plugins;
 
@@ -285,9 +283,11 @@ public class MyVpnService extends VpnService implements Runnable {
 
         DatabaseHandler db = DatabaseHandler.getInstance(this);
 
-        // w3kim@uwaterloo.ca
-        // disabled since we don't seem to be doing anything with this recorded information
-        db.addUrlIfAny(leak.metaData.appName, leak.metaData.packageName, request);
+        if (leak.category == LeakReport.LeakCategory.DOMAIN) {
+
+        } else if (leak.category == LeakReport.LeakCategory.CRYPTOMINER) {
+
+        }
 
         int notifyId = db.findNotificationId(leak);
         if (notifyId < 0) {
@@ -297,10 +297,15 @@ public class MyVpnService extends VpnService implements Runnable {
         int frequency = db.findNotificationCounter(notifyId, leak.category.name());
 
         buildNotification(notifyId, frequency, leak);
-
     }
 
     void buildNotification(int notifyId, int frequency, LeakReport leak) {
+        // TODO: build notification for suspicious domain and cryptominer detected and SMS
+        if (leak.category == LeakReport.LeakCategory.DOMAIN
+                || leak.category == LeakReport.LeakCategory.CRYPTOMINER
+                || leak.category == LeakReport.LeakCategory.SMS) {
+            return;
+        }
 
         int idx = leak.metaData.destHostName.lastIndexOf('.');
         String destNetwork;

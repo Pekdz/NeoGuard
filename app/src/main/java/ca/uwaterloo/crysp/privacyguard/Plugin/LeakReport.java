@@ -14,7 +14,10 @@ public class LeakReport {
         LOCATION,
         CONTACT,
         DEVICE,
-        KEYWORD
+        KEYWORD,
+        DOMAIN,
+        CRYPTOMINER,
+        SMS
     }
 
     public ConnectionMetaData metaData;

@@ -1,17 +1,13 @@
 package ca.uwaterloo.crysp.privacyguard.Application.Activities;
 
-import android.os.Bundle;
 import android.app.Activity;
+import android.os.Bundle;
 
-import ca.uwaterloo.crysp.privacyguard.R;
-
-public class PacketDetails extends Activity {
+public class PacketDetail extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_packet_details);
-
+        setContentView(R.layout.activity_packet_detail);
     }
-
 }

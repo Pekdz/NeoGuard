@@ -21,14 +21,17 @@ package ca.uwaterloo.crysp.privacyguard.Application.Network.Forwarder;
 
 import ca.uwaterloo.crysp.privacyguard.Application.Logger;
 import ca.uwaterloo.crysp.privacyguard.Application.Network.ConnectionMetaData;
+import ca.uwaterloo.crysp.privacyguard.Application.Network.DPI;
 import ca.uwaterloo.crysp.privacyguard.Application.Network.FakeVPN.MyVpnService;
 import ca.uwaterloo.crysp.privacyguard.Application.Network.FilterThread;
+import ca.uwaterloo.crysp.privacyguard.Application.Network.FlowStats;
 import ca.uwaterloo.crysp.privacyguard.Application.PrivacyGuard;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Arrays;
 
 public class LocalServerForwarder extends Thread {
 
@@ -41,8 +44,10 @@ public class LocalServerForwarder extends Thread {
     private InputStream in;
     private OutputStream out;
     private ConnectionMetaData metaData;
+    private FlowStats flowStats;
+    private DPI dpi;
 
-    public LocalServerForwarder(Socket inSocket, Socket outSocket, boolean isOutgoing, MyVpnService vpnService, String packageName, String appName) {
+    public LocalServerForwarder(Socket inSocket, Socket outSocket, boolean isOutgoing, MyVpnService vpnService, String packageName, String appName, FlowStats flowStats, boolean isPlain) {
         try {
             this.in = inSocket.getInputStream();
             this.out = outSocket.getOutputStream();
@@ -51,8 +56,9 @@ public class LocalServerForwarder extends Thread {
         }
         this.outgoing = isOutgoing;
         this.vpnService = vpnService;
-
-        this.metaData = new ConnectionMetaData(packageName, appName, null, 0, null, 0, null, outgoing);
+        this.flowStats = flowStats;
+        this.dpi = DPI.getInstance();
+        this.metaData = new ConnectionMetaData(packageName, appName, null, 0, null, 0, null, outgoing, isPlain);
 
         metaData.destIP = outSocket.getInetAddress().getHostAddress();
         metaData.destPort = outSocket.getPort();
@@ -64,13 +70,15 @@ public class LocalServerForwarder extends Thread {
         setDaemon(true);
     }
 
-    public static void connect(Socket clientSocket, Socket serverSocket, MyVpnService vpnService, String packageName, String appName) throws Exception {
+    public static void connect(Socket clientSocket, Socket serverSocket, MyVpnService vpnService, String packageName, String appName, boolean isPlain) throws Exception {
         if (clientSocket != null && serverSocket != null && clientSocket.isConnected() && serverSocket.isConnected()) {
-
             clientSocket.setSoTimeout(0);
             serverSocket.setSoTimeout(0);
-            LocalServerForwarder clientServer = new LocalServerForwarder(clientSocket, serverSocket, true, vpnService, packageName, appName);
-            LocalServerForwarder serverClient = new LocalServerForwarder(serverSocket, clientSocket, false, vpnService, packageName, appName);
+
+            FlowStats flowStats = new FlowStats();
+
+            LocalServerForwarder clientServer = new LocalServerForwarder(clientSocket, serverSocket, true, vpnService, packageName, appName, flowStats, isPlain);
+            LocalServerForwarder serverClient = new LocalServerForwarder(serverSocket, clientSocket, false, vpnService, packageName, appName, flowStats, isPlain);
             clientServer.start();
             serverClient.start();
 
@@ -82,6 +90,10 @@ public class LocalServerForwarder extends Thread {
                 }
             }
             if (DEBUG) Logger.d(TAG, "Stop forwarding " + clientSocket.getInetAddress().getHostAddress()+ ":" + clientSocket.getPort() + "<->" + serverSocket.getInetAddress().getHostAddress() + ":" + serverSocket.getPort());
+
+            // TODO: End of a flow, can write flow statistics to database
+            flowStats.calculate();
+
             clientSocket.close();
             serverSocket.close();
             clientServer.join();
@@ -107,12 +119,24 @@ public class LocalServerForwarder extends Thread {
             byte[] buff = new byte[LIMIT];
             int got;
             while ((got = in.read(buff)) > -1) {
-                if (PrivacyGuard.doFilter) {
-                    String msg = new String(buff, 0, got);
+                // TODO: mod flow statistics
+                if (outgoing)
+                    flowStats.addFwdPkt(got);
+                else
+                    flowStats.addBackPkt(got);
+
+                if (PrivacyGuard.doFilter && metaData.isPlain) {
+                    byte[] payload = Arrays.copyOf(buff, got);
+
+                    // check protocol of flow
+                    if (metaData.protocol == null) {
+                        metaData.protocol = dpi.getProtocol(metaData, new String(buff, 0, got));
+                    }
+
                     if (PrivacyGuard.asynchronous) {
-                        vpnService.getFilterThread().offer(msg, metaData);
+                        vpnService.getFilterThread().offer(payload, metaData);
                     } else {
-                        filterObject.filter(msg);
+                        filterObject.filter(payload);
                     }
                 }
                 if (DEBUG) Logger.d(TAG, got + " bytes to be written to " + metaData.srcIP + ":" + metaData.srcPort + "->" + metaData.destIP + ":" + metaData.destPort);
@@ -122,7 +146,7 @@ public class LocalServerForwarder extends Thread {
             }
             if (DEBUG) Logger.d(TAG, "terminating " + metaData.srcIP + ":" + metaData.srcPort + "->" + metaData.destIP + ":" + metaData.destPort);
         } catch (Exception ignore) {
-            ignore.printStackTrace();
+            // ignore.printStackTrace();
             if (DEBUG) Logger.d(TAG, "outgoing : " + outgoing);
             // can happen when app opens a connection and then terminates it right away so
             // this thread will start running only after a FIN has already been to the server

@@ -11,6 +11,7 @@ import android.os.Looper;
 import android.support.annotation.Nullable;
 
 import ca.uwaterloo.crysp.privacyguard.Application.Logger;
+import ca.uwaterloo.crysp.privacyguard.Application.Network.ConnectionMetaData;
 import ca.uwaterloo.crysp.privacyguard.Plugin.LeakReport.LeakCategory;
 import ca.uwaterloo.crysp.privacyguard.Utilities.StringUtil;
 
@@ -33,7 +34,7 @@ public class LocationDetection implements IPlugin {
 
     @Override
     @Nullable
-    public LeakReport handleRequest(String requestStr) {
+    public LeakReport handleRequest(String requestStr, byte[] rawRequest, ConnectionMetaData metaData) {
         for (Location loc : mLocations.values()) {
             //double latD = Math.round(loc.getLatitude() * 10) / 10.0;
             //double lonD = Math.round(loc.getLongitude() * 10) / 10.0;

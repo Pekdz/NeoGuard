@@ -8,6 +8,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Patterns;
 
 import ca.uwaterloo.crysp.privacyguard.Application.Logger;
+import ca.uwaterloo.crysp.privacyguard.Plugin.CryptominerInstance;
+import ca.uwaterloo.crysp.privacyguard.Plugin.DomainInstance;
 import ca.uwaterloo.crysp.privacyguard.Plugin.LeakInstance;
 import ca.uwaterloo.crysp.privacyguard.Plugin.LeakReport;
 
@@ -77,6 +79,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         // w3kim@uwaterloo.ca
         db.execSQL(CREATE_URL_TABLE);
         db.execSQL(CREATE_TRAFFIC_TABLE);
+        db.execSQL(CREATE_PACKET_TABLE);
+        db.execSQL(CREATE_DOMAIN_TABLE);
+        db.execSQL(CREATE_CRYPTO_TABLE);
     }
 
     // Upgrading database
@@ -94,7 +99,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     // DataLeaks table name
-    private static final String TABLE_DATA_LEAKS = "data_leaks";
     private static final String TABLE_LEAK_SUMMARY = "leak_summary";
 
     // DataLeaks Table Columns names
@@ -106,6 +110,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String KEY_CONTENT = "content";
     private static final String KEY_TIME_STAMP = "time_stamp";
     private static final String KEY_HOSTNAME = "host_name";
+    private static final String KEY_REFPACKET_ID = "ref_pkt_id";
 
     public static final int FOREGROUND_STATUS = 1;
     public static final int BACKGROUND_STATUS = 0;
@@ -124,13 +129,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             + KEY_FOREGROUND_STATUS + " INTEGER,"
             + KEY_HOSTNAME + " TEXT)";
 
-    // ------------------------------ w3kim@uwaterloo.ca -----------------------------
-
     private static final String TAG = DatabaseHandler.class.getSimpleName();
 
     // URL Table Name
     private static final String TABLE_URL = "urls";
-    // URL Table Column names
     private static final String KEY_URL_ID = "_id";
     private static final String KEY_URL_APP_NAME = "app_name";
     private static final String KEY_URL_PACKAGE = "package_name";
@@ -150,9 +152,36 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             + KEY_URL_RES + " TEXT,"
             + KEY_URL_QUERY_PARAMS + " TEXT,"
             + KEY_URL_TIMESTAMP + " TEXT )";
-    private static final String KEY_FREQUENCY = "frequency";
 
-    // ------------------------------ w3kim@uwaterloo.ca -----------------------------
+    // Packet record table
+    private static final String TABLE_PACKET = "packets";
+    private static final String KEY_PACKET_ID = "_id";
+    private static final String KEY_PACKET_DOMAIN = "domain";
+    private static final String KEY_PACKET_IP = "ip";
+    private static final String KEY_PACKET_PORT = "port";
+    private static final String KEY_PACKET_TYPE = "type";
+    private static final String KEY_PACKET_PATH = "path";
+    private static final String KEY_PACKET_QUERY = "querys";
+    private static final String KEY_PACKET_FRAGMENT = "fragments";
+    private static final String KEY_PACKET_PAYLOAD = "payload";
+    private static final String KEY_PACKET_TIME = "time";
+
+    private static final String CREATE_PACKET_TABLE = "CREATE TABLE " + TABLE_PACKET + "("
+            + KEY_PACKET_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+            + KEY_PACKET_DOMAIN + " TEXT,"
+            + KEY_PACKET_IP + " TEXT,"
+            + KEY_PACKET_PORT + " INTEGER,"
+            + KEY_PACKET_TYPE + " TEXT,"
+            + KEY_PACKET_PATH + " TEXT,"
+            + KEY_PACKET_QUERY + " TEXT,"
+            + KEY_PACKET_FRAGMENT + " TEXT,"
+            + KEY_PACKET_PAYLOAD + " TEXT,"
+            + KEY_PACKET_TIME + " TEXT )";
+
+
+    // Data leak table
+    private static final String TABLE_DATA_LEAKS = "data_leaks";
+    private static final String KEY_FREQUENCY = "frequency";
     private static final String KEY_IGNORE = "ignore";
     private static final String CREATE_DATA_LEAKS_TABLE = "CREATE TABLE " + TABLE_DATA_LEAKS + "("
             + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -172,7 +201,37 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             + KEY_FREQUENCY + " INTEGER,"
             + KEY_IGNORE + " INTEGER)";
 
-    ////////////////////////////////////////////
+    // Suspicious domain alert table
+    private static final String TABLE_DOMAIN_ALERT = "domain_alerts";
+    private static final String KEY_DOMAIN_DOMAIN = "domain";
+    private static final String KEY_DOMAIN_ISDGA = "isdga";
+    private static final String KEY_DOMAIN_SCORE = "score";
+    private static final String CREATE_DOMAIN_TABLE = "CREATE TABLE " + TABLE_DOMAIN_ALERT + "("
+            + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+            + KEY_PACKAGE + " TEXT,"
+            + KEY_NAME + " TEXT,"
+            + KEY_REFPACKET_ID + " INTEGER,"
+            + KEY_DOMAIN_DOMAIN + " TEXT,"
+            + KEY_DOMAIN_ISDGA + " TEXT,"
+            + KEY_TIME_STAMP + " TEXT,"
+            + KEY_DOMAIN_SCORE + " REAL)";
+
+    // Cyptominer alert table
+    private static final String TABLE_CRYPTO_ALERT = "crypto_alerts";
+    private static final String KEY_CRYPTO_DOMAIN = "domain";
+    private static final String KEY_CRYPTO_DOMAINISPOOL = "ispool";
+    private static final String KEY_CRYPTO_SIGNATURE = "signature";
+    private static final String CREATE_CRYPTO_TABLE = "CREATE TABLE " + TABLE_CRYPTO_ALERT + "("
+            + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+            + KEY_PACKAGE + " TEXT,"
+            + KEY_NAME + " TEXT,"
+            + KEY_REFPACKET_ID + " INTEGER,"
+            + KEY_CRYPTO_DOMAIN + " TEXT,"
+            + KEY_CRYPTO_SIGNATURE + " TEXT,"
+            + KEY_TIME_STAMP + " TEXT,"
+            + KEY_CRYPTO_DOMAINISPOOL + " TEXT)";
+
+    // Traffic summary table
     private static final String TABLE_TRAFFIC_SUMMARY = "traffic_summary";
     private static final String KEY_TRAFFIC_ID = "_id";
     private static final String KEY_TRAFFIC_APP_NAME = "app_name";
@@ -310,6 +369,39 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         mDB.insert(TABLE_URL, null, values);
     }
 
+    public PacketRecord addPacketRecord(PacketRecord record) {
+        ContentValues values = new ContentValues();
+        values.put(KEY_PACKET_DOMAIN, record.domain);
+        values.put(KEY_PACKET_IP, record.destIp);
+        values.put(KEY_PACKET_PORT, record.destPort);
+        values.put(KEY_PACKET_TYPE, record.type);
+        values.put(KEY_PACKET_PATH, record.path);
+        values.put(KEY_PACKET_QUERY, record.query);
+        values.put(KEY_PACKET_FRAGMENT, record.fragment);
+        values.put(KEY_PACKET_PAYLOAD, record.payload);
+        values.put(KEY_PACKET_TIME, record.time);
+
+        record.dbId = mDB.insert(TABLE_PACKET, null, values);
+        return record;
+    }
+
+    public PacketRecord getPacketRecord(long packetId) {
+        PacketRecord record = null;
+        Cursor cursor = mDB.query(TABLE_PACKET, new String[]{KEY_PACKET_DOMAIN, KEY_PACKET_IP,
+                        KEY_PACKET_PORT, KEY_PACKET_TYPE, KEY_PACKET_PATH, KEY_PACKET_QUERY, KEY_PACKET_FRAGMENT, KEY_PACKET_PAYLOAD, KEY_PACKET_TIME},
+                KEY_ID + "=? ",
+                new String[]{Long.toString(packetId)}, null, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                record = new PacketRecord(cursor.getString(0), cursor.getString(1),
+                        cursor.getInt(2), cursor.getString(3), cursor.getString(4),
+                        cursor.getString(5), cursor.getString(6), cursor.getString(3));
+            }
+            cursor.close();
+        }
+        return record;
+    }
+
     public void deletePackage(String packageName) {
         mDB.delete(TABLE_DATA_LEAKS, KEY_PACKAGE + "=?", new String[] {packageName});
         mDB.delete(TABLE_LEAK_SUMMARY, KEY_PACKAGE + "=?", new String[] {packageName});
@@ -342,6 +434,36 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 new UpdateLeakForegroundStatus(applicationContext).execute(id);
             }
         }, TimeUnit.SECONDS.toMillis(10));
+    }
+
+    private void addDomainAlert(String packageName, String appName, String domain, boolean isDGA,
+                                double score, long refPacketId, String time) {
+        ContentValues values = new ContentValues();
+        values.put(KEY_PACKAGE, packageName);
+        values.put(KEY_NAME, appName);
+        values.put(KEY_DOMAIN_DOMAIN, domain);
+        String isDGAstr = isDGA ? "Yes" : "No";
+        values.put(KEY_DOMAIN_ISDGA, isDGAstr);
+        values.put(KEY_DOMAIN_SCORE, score);
+        values.put(KEY_TIME_STAMP, time);
+        values.put(KEY_REFPACKET_ID, refPacketId);
+
+        mDB.insert(TABLE_DOMAIN_ALERT, null, values);
+    }
+
+    private void addCryptoAlert(String packageName, String appName, String domain, boolean isPool,
+                                String signature, long refPacketId, String time) {
+        ContentValues values = new ContentValues();
+        values.put(KEY_PACKAGE, packageName);
+        values.put(KEY_NAME, appName);
+        values.put(KEY_CRYPTO_DOMAIN, domain);
+        String isPoolStr = isPool ? "Yes" : "No";
+        values.put(KEY_CRYPTO_DOMAINISPOOL, isPoolStr);
+        values.put(KEY_CRYPTO_SIGNATURE, signature);
+        values.put(KEY_REFPACKET_ID, refPacketId);
+        values.put(KEY_TIME_STAMP, time);
+
+        mDB.insert(TABLE_CRYPTO_ALERT, null, values);
     }
 
     public void addAppStatusEvent(String packageName, long timeStamp, int foreground) {
@@ -487,6 +609,40 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return leakList;
     }
 
+    public List<DomainAlert> getAppDomainAlerts(String packageName) {
+        List<DomainAlert> domainAlerts = new ArrayList<>();
+        Cursor cursor = mDB.query(TABLE_DOMAIN_ALERT, new String[]{KEY_PACKAGE, KEY_NAME, KEY_DOMAIN_DOMAIN, KEY_DOMAIN_ISDGA, KEY_DOMAIN_SCORE, KEY_TIME_STAMP, KEY_REFPACKET_ID},
+                KEY_PACKAGE + "=?", new String[]{packageName},
+                null, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                do {
+                    DomainAlert alert = new DomainAlert(cursor.getString(0), cursor.getString(1), "DOMAIN", cursor.getString(2), cursor.getString(3), cursor.getDouble(4), cursor.getString(5), cursor.getLong(6));
+                    domainAlerts.add(alert);
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
+        }
+        return domainAlerts;
+    }
+
+    public List<CryptominerAlert> getAppCryptoAlerts(String packageName) {
+        List<CryptominerAlert> cryptoAlerts = new ArrayList<>();
+        Cursor cursor = mDB.query(TABLE_CRYPTO_ALERT, new String[]{KEY_PACKAGE, KEY_NAME, KEY_CRYPTO_DOMAIN, KEY_CRYPTO_DOMAINISPOOL, KEY_CRYPTO_SIGNATURE, KEY_TIME_STAMP, KEY_REFPACKET_ID},
+                KEY_PACKAGE + "=?", new String[]{packageName},
+                null, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                do {
+                    CryptominerAlert alert = new CryptominerAlert(cursor.getString(0), cursor.getString(1), "DOMAIN", cursor.getString(2), cursor.getString(3), cursor.getString(4), cursor.getString(5), cursor.getLong(6));
+                    cryptoAlerts.add(alert);
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
+        }
+        return cryptoAlerts;
+    }
+
     public List<URLTrace> getUrlTraces(String packageName) {
         List<URLTrace> urlList = new ArrayList<>();
         Cursor cursor = mDB.query(TABLE_URL, new String[]{KEY_URL_PACKAGE, KEY_URL_APP_NAME, KEY_URL_URL, KEY_URL_QUERY_PARAMS, KEY_URL_HOST, KEY_URL_RES, KEY_URL_TIMESTAMP},
@@ -566,6 +722,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return false;
     }
 
+    /**
+     * Update leak summary table, frequency.
+     * Add leaks into dataleak table.
+     * */
     public int findNotificationId(LeakReport rpt) {
         Cursor cursor = mDB.query(TABLE_LEAK_SUMMARY,
                 new String[]{KEY_ID, KEY_FREQUENCY, KEY_IGNORE},
@@ -592,9 +752,24 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
             cursor.close();
 
-            for (LeakInstance li : rpt.leaks) {
-                addDataLeak(rpt.metaData.packageName, rpt.metaData.appName, rpt.category.name(), li.type, li.content, rpt.metaData.destHostName);
+            if (rpt.category == LeakReport.LeakCategory.DOMAIN) {
+                for (LeakInstance li : rpt.leaks) {
+                    DomainInstance inst = (DomainInstance) li;
+                    addDomainAlert(rpt.metaData.packageName, rpt.metaData.appName, inst.content,
+                            inst.isDGA, inst.reputationScore, inst.refPacketId, inst.time);
+                }
+            } else if (rpt.category == LeakReport.LeakCategory.CRYPTOMINER) {
+                for (LeakInstance li : rpt.leaks) {
+                    CryptominerInstance inst = (CryptominerInstance) li;
+                    addCryptoAlert(rpt.metaData.packageName, rpt.metaData.appName, inst.content,
+                            inst.isPoolDomain, inst.signatureName, inst.refPacketId, inst.time);
+                }
+            } else {
+                for (LeakInstance li : rpt.leaks) {
+                    addDataLeak(rpt.metaData.packageName, rpt.metaData.appName, rpt.category.name(), li.type, li.content, rpt.metaData.destHostName);
+                }
             }
+
             // Need to update frequency in summary table accordingly
             // Which row to update, based on the package and category
             ContentValues values = new ContentValues();

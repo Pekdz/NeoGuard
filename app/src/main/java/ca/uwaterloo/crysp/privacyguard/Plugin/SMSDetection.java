@@ -1,11 +1,12 @@
-package com.myapp.cryptominer;
+package ca.uwaterloo.crysp.privacyguard.Plugin;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class SMSDetect {
+
+public class SMSDetection {
     private static final HashSet<String> smsList = new HashSet<>();
     public void addSMSlist(String smsbody) {
         smsList.add(smsbody);
@@ -25,7 +26,7 @@ public class SMSDetect {
         for(String sms: smsList) {
             String sms_code = generateCode(sms);
             if (request.contains(sms_code)) {
-                leaks.add(new LeakInstance("Leak sms verification code", sms_code));
+                leaks.add(new LeakInstance("Leak sms verification code", sms_code, -1));
             }
         }
         if(leaks.isEmpty()){

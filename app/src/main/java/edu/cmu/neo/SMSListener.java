@@ -1,4 +1,4 @@
-package com.myapp.cryptominer;
+package edu.cmu.neo;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

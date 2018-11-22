@@ -1,16 +1,15 @@
-package com.myapp.cryptominer;
+package edu.cmu.neo;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-public class CryptominerDetect {
+public class CryptominerDetectionTool {
     private String domain;
     //private int portnumber;
     private String ws_payload;
@@ -18,13 +17,13 @@ public class CryptominerDetect {
             "bitminter.com", "mmpool.bitparking.com", "blisterpool.com", "btcguild.com", "btcmine.com", "btcmp.com",
             "btcmow.com", "btcwarp.com", "btcpoolman.com", "coinminers.co", "coinotron.com", "deepbit.net");
     private Set<String> MiningPoolUrls = new HashSet<>(urls);
-    private static CryptominerDetect instance;
-    private CryptominerDetect() {
+    private static CryptominerDetectionTool instance;
+    private CryptominerDetectionTool() {
 
     }
-    public static CryptominerDetect getInstance() {
+    public static CryptominerDetectionTool getInstance() {
         if (instance == null)
-            instance = new CryptominerDetect();
+            instance = new CryptominerDetectionTool();
         return instance;
     }
 

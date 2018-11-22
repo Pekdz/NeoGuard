@@ -10,7 +10,9 @@ public class DataLeak extends ReportItem {
     private int foregroundStatus;
     private String destination;
 
-    public DataLeak(String packageName, String appName, String category, String type, String content, String timestamp, int foregroundStatus, String destination){
+    public DataLeak(String packageName, String appName, String category, String type,
+                    String content, String timestamp, int foregroundStatus,
+                    String destination, long refPacketId){
         this.packageName = packageName;
         this.appName = appName;
         this.category = category;
@@ -19,6 +21,7 @@ public class DataLeak extends ReportItem {
         this.timestamp = timestamp;
         this.foregroundStatus = foregroundStatus;
         this.destination = destination;
+        this.refPacketId = refPacketId;
 
         try {
             this.timestampDate = DatabaseHandler.getDateFormat().parse(timestamp);
@@ -27,8 +30,6 @@ public class DataLeak extends ReportItem {
             throw new RuntimeException("Invalid timestamp for DataLeak, tried to parse: " + timestamp);
         }
     }
-
-
 
     public String getType() {
         return type;

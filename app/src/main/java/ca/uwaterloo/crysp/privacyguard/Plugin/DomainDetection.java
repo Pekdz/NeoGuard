@@ -6,6 +6,9 @@ import android.support.annotation.Nullable;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 
 import ca.uwaterloo.crysp.privacyguard.Application.Database.DatabaseHandler;
 import ca.uwaterloo.crysp.privacyguard.Application.Database.PacketRecord;
@@ -19,6 +22,7 @@ import rawhttp.core.RawHttpRequest;
 public class DomainDetection implements IPlugin {
     private final boolean DEBUG = true;
     private final String TAG = DomainDetection.class.getSimpleName();
+    private HashSet<String> commonFileSet;
     DatabaseHandler db;
     DPI dpi;
 
@@ -32,12 +36,22 @@ public class DomainDetection implements IPlugin {
                 RawHttpRequest httpReq = dpi.parseHttpRequest(request);
                 if (httpReq != null) {
                     URI uri = httpReq.getUri();
+
+                    String method = httpReq.getMethod();
+                    String[] pathParts = uri.getPath().split("\\.");
+
+                    if (method.equals("GET") && commonFileSet.contains(pathParts[pathParts.length - 1])) {
+                        if (DEBUG)
+                            Logger.i(TAG, "HTTP GET common files, ignore for domain checking.");
+                        return null;
+                    }
+
                     String payload = "";
                     if (httpReq.getBody().isPresent())
                         payload = httpReq.getBody().get().decodeBodyToString(Charset.forName("UTF-8"));
 
                     boolean isDGA = DGADetector.getInstance().isDGA(uri.getAuthority());
-                    // TODO: check domain reputation & DGA
+                    // TODO: check domain reputation
                     double reputationScore = 0;
 
                     if (DEBUG) {
@@ -109,5 +123,6 @@ public class DomainDetection implements IPlugin {
     public void setContext(Context context) {
         db = DatabaseHandler.getInstance(context);
         dpi = DPI.getInstance();
+        commonFileSet = new HashSet<>(Arrays.asList("js", "html", "css", "svg", "gif", "png", "jpg", "woff2"));
     }
 }

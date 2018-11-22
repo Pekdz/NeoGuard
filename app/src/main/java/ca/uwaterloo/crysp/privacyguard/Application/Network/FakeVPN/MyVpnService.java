@@ -36,6 +36,7 @@ import ca.uwaterloo.crysp.privacyguard.Application.ActionReceiver;
 import ca.uwaterloo.crysp.privacyguard.Application.Activities.AppSummaryActivity;
 import ca.uwaterloo.crysp.privacyguard.Plugin.CryptominerDetection;
 import ca.uwaterloo.crysp.privacyguard.Plugin.DomainDetection;
+import ca.uwaterloo.crysp.privacyguard.Plugin.SMSDetection;
 import ca.uwaterloo.crysp.privacyguard.R;
 import ca.uwaterloo.crysp.privacyguard.Application.Database.DatabaseHandler;
 import ca.uwaterloo.crysp.privacyguard.Application.Logger;
@@ -94,7 +95,8 @@ public class MyVpnService extends VpnService implements Runnable {
             //ContactDetection.class,
             //KeywordDetection.class,
             DomainDetection.class,
-            CryptominerDetection.class
+            CryptominerDetection.class,
+            SMSDetection.class
     };
     private ArrayList<IPlugin> plugins;
 
@@ -285,12 +287,6 @@ public class MyVpnService extends VpnService implements Runnable {
 
         DatabaseHandler db = DatabaseHandler.getInstance(this);
 
-        if (leak.category == LeakReport.LeakCategory.DOMAIN) {
-
-        } else if (leak.category == LeakReport.LeakCategory.CRYPTOMINER) {
-
-        }
-
         int notifyId = db.findNotificationId(leak);
         if (notifyId < 0) {
             return;
@@ -302,10 +298,9 @@ public class MyVpnService extends VpnService implements Runnable {
     }
 
     void buildNotification(int notifyId, int frequency, LeakReport leak) {
-        // TODO: build notification for suspicious domain and cryptominer detected and SMS
+        // TODO: build notification for suspicious domain and cryptominer detected
         if (leak.category == LeakReport.LeakCategory.DOMAIN
-                || leak.category == LeakReport.LeakCategory.CRYPTOMINER
-                || leak.category == LeakReport.LeakCategory.SMS) {
+                || leak.category == LeakReport.LeakCategory.CRYPTOMINER) {
             return;
         }
 

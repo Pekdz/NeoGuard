@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 public class SMSDetect {
     private static final HashSet<String> smsList = new HashSet<>();
-    public void addSMSlist(String smsbody) {
+    public static void addSMSlist(String smsbody) {
         smsList.add(smsbody);
     }
     private String generateCode(String Body) {

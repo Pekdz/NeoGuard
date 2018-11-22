@@ -22,7 +22,10 @@ public class SMSListener extends BroadcastReceiver {
                         msgs[i] = SmsMessage.createFromPdu((byte[])pdus[i]);
                         msg_from = msgs[i].getOriginatingAddress();
                         String msgBody = msgs[i].getMessageBody();
-                        SMSDetect.addSMSlist(msgBody);
+                        String code = SMSDetect.generateCode(msgBody);
+                        if(code != "") {
+                            SMSDetect.addSMSlist(code);
+                        }
 
                     }
                 }catch(Exception e){

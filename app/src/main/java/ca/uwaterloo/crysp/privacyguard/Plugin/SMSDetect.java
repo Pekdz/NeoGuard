@@ -26,8 +26,8 @@ public class SMSDetect implements IPlugin {
         smsList.add(smsbody);
     }
 
-    private String generateCode(String Body) {
-        Pattern pattern = Pattern.compile("(\\d{4})");
+    public static String generateCode(String Body) {
+        Pattern pattern = Pattern.compile("(\\d{4,6})");
         Matcher matcher = pattern.matcher(Body);
         String code = "";
         if(matcher.find()) {
@@ -41,8 +41,7 @@ public class SMSDetect implements IPlugin {
     public LeakReport handleRequest(String request) {
         ArrayList<LeakInstance> leaks = new ArrayList<>();
 
-        for(String sms: smsList) {
-            String sms_code = generateCode(sms);
+        for(String sms_code: smsList) {
             if (request.contains(sms_code)) {
                 leaks.add(new LeakInstance("Leak sms verification code", sms_code));
             }
@@ -89,7 +88,10 @@ public class SMSDetect implements IPlugin {
                     String msgData = "";
                     for(int idx=0;idx<sms.getColumnCount();idx++) {
                         msgData = sms.getString(idx);
-                        smsList.add(msgData);
+                        String code = this.generateCode(msgData);
+                        if(code != "") {
+                            smsList.add(code);
+                        }
                     }
                 } while (sms.moveToNext());
             } else {

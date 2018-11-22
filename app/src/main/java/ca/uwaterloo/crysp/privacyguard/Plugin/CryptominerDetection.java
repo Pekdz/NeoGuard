@@ -125,48 +125,36 @@ public class CryptominerDetection implements IPlugin {
 
             return signature;
         }
+
         //check json object schema
-        private boolean checkJsonSchema(JSONObject obj) {
+        private boolean checkJsonSchema(JSONObject obj) throws JSONException {
             Iterator<String> keys = obj.keys();
-            List<String> keysList = new ArrayList<String>();
+            List<String> keysList = new ArrayList<>();
             while (keys.hasNext()) {
                 String key = keys.next();
                 keysList.add(key);
             }
-            if(keysList.size() != 2) {
-                return false;
-            }
-            else {
-                if(keysList.contains("type") && keysList.contains("params")) {
-                    try {
-                        JSONObject sub_obj = obj.getJSONObject("params");
-                        Iterator<String> sub_keys = sub_obj.keys();
-                        List<String> sub_keysList = new ArrayList<String>();
-                        while (sub_keys.hasNext()) {
-                            String sub_key = sub_keys.next();
-                            sub_keysList.add(sub_key);
-                        }
-                        if(sub_keysList.size() != 5) {
-                            return false;
-                        }
-                        else {
-                            if(sub_keysList.contains("version") && sub_keysList.contains("site_key") && sub_keysList.contains("type")
-                                    && sub_keysList.contains("user") && sub_keysList.contains("goal")) {
-                                return true;
-                            }
-                            else {
-                                return false;
-                            }
-                        }
-                    } catch (JSONException e) {
-                        return false;
-                    }
+            if (keysList.size() == 2
+                    && keysList.contains("type")
+                    && keysList.contains("params")) {
+                JSONObject sub_obj = obj.getJSONObject("params");
+                Iterator<String> sub_keys = sub_obj.keys();
+                List<String> sub_keysList = new ArrayList<>();
+                while (sub_keys.hasNext()) {
+                    String sub_key = sub_keys.next();
+                    sub_keysList.add(sub_key);
                 }
-                else {
-                    return false;
+                if (sub_keysList.size() == 5) {
+                    return sub_keysList.contains("version")
+                            && sub_keysList.contains("site_key")
+                            && sub_keysList.contains("type")
+                            && sub_keysList.contains("user")
+                            && sub_keysList.contains("goal");
                 }
             }
+            return false;
         }
+
         //check coinhive websocket payload pattern
         private boolean checkCoinHive(String payload) {
             try {

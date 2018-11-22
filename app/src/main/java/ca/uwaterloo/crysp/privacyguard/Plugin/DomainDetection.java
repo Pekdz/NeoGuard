@@ -41,7 +41,7 @@ public class DomainDetection implements IPlugin {
                     double reputationScore = 0;
 
                     if (DEBUG) {
-                        Logger.i(TAG, metaData.appName + " ===== HTTP Request ======\n "
+                        Logger.i(TAG, metaData.appName + " ====== HTTP Request ======\n "
                                 //+ "Destination: " + metaData.destIP + ":" + metaData.destPort + "\n"
                                 + "\nURI => " + uri.toString()
                                 //+ "\nAuth => " + uri.getAuthority()
@@ -51,10 +51,8 @@ public class DomainDetection implements IPlugin {
                                 //+ "\nUpgrade => " + httpReq.getHeaders().getFirst("Upgrade").toString()
                                 //+ "\nUserAgent => " + httpReq.getHeaders().getFirst("User-Agent").toString()
                                 + "\nBody => " + payload
-                                + "\n===========\n");
-
-                        Logger.i(TAG, metaData.appName + " ==== Domain Result =====\n"
-                                + "isDGA => " + isDGA + ", score => " + reputationScore + "\n");
+                                + "\nCheck Result => isDGA: " + isDGA + ", score: " + reputationScore
+                                + "\n ====================\n");
                     }
 
                     if (isDGA || reputationScore > 0.6) {

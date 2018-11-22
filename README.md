@@ -15,7 +15,7 @@ Y. Song and U. Hengartner. [PrivacyGuard: A VPN-based Platform to Detect Informa
 	- Android SDK Platform-Tolls
 	- Google Play service
 	- Android Support Repository
-	- Android Support Library
+	- Android Support Librarya
 	- Intel x85 Emulator Accelerator
 3. install intelhaxm-android to be able to run emulator
 4. Change the memory limit of AVD emulator to that of HAXM (1 GB) for emulator to work:	[Stackoverflow](http://stackoverflow.com/questions/21031903/how-to-fix-hax-is-not-working-and	-emulator-runs-in-emulation-mode)

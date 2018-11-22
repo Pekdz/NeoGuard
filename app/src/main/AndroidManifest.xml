@@ -14,11 +14,9 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-
-    <uses-permission
-        xmlns:tools="http://schemas.android.com/tools"
+    <uses-permission xmlns:tools="http://schemas.android.com/tools"
         android:name="android.permission.PACKAGE_USAGE_STATS"
-        tools:ignore="ProtectedPermissions"/>
+        tools:ignore="ProtectedPermissions" />
 
     <uses-feature
         android:glEsVersion="0x00020000"
@@ -120,6 +118,10 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
+
+        <activity
+            android:name=".Application.Activities.PacketDetails"
+            android:label="@string/title_activity_packet_details"></activity>
     </application>
 
 </manifest>

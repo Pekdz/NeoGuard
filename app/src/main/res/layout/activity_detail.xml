@@ -10,9 +10,9 @@
     <include layout="@layout/detail_header"/>
 
     <ListView
+        android:id="@+id/detail_list"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/detail_list"/>
+        android:layout_height="wrap_content" />
 
 
 

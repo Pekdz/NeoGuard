@@ -74,7 +74,12 @@ public class DomainDetailActivity extends AppCompatActivity {
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                // URLTrace url = (URLTrace) parent.getItemAtPosition(position);
+                DomainAlert alert = (DomainAlert) parent.getItemAtPosition(position);
+                Intent intent;
+                intent = new Intent(DomainDetailActivity.this, PacketDetailActivity.class);
+
+                intent.putExtra(PrivacyGuard.EXTRA_REF_PACKETID, alert.getRefPacketId());
+                startActivity(intent);
             }
         });
     }

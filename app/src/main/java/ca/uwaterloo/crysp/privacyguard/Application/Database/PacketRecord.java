@@ -29,4 +29,33 @@ public class PacketRecord {
         SimpleDateFormat formatter = new SimpleDateFormat("MM/dd HH:mm:ss");
         this.time = formatter.format(new Date());
     }
+
+    public PacketRecord(String domain, String destIp, int destPort, String type,
+                        String path, String query, String fragment, String payload, String time) {
+        this.domain = domain;
+        this.destIp = destIp;
+        this.destPort = destPort;
+        this.type = type;
+        this.path = path;
+        this.query = query;
+        this.fragment = fragment;
+        this.payload = payload;
+        this.time = time;
+    }
+
+    @Override
+    public String toString() {
+        return "PacketRecord{" +
+                "domain='" + domain + '\'' +
+                ", destIp='" + destIp + '\'' +
+                ", destPort=" + destPort +
+                ", type='" + type + '\'' +
+                ", path='" + path + '\'' +
+                ", query='" + query + '\'' +
+                ", fragment='" + fragment + '\'' +
+                ", payload='" + payload + '\'' +
+                ", time='" + time + '\'' +
+                ", dbId=" + dbId +
+                '}';
+    }
 }

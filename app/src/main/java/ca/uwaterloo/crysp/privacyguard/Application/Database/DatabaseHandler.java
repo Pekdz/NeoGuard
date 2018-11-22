@@ -346,12 +346,14 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(KEY_PACKET_FRAGMENT, record.fragment);
         values.put(KEY_PACKET_PAYLOAD, record.payload);
         values.put(KEY_PACKET_TIME, record.time);
-
         record.dbId = mDB.insert(TABLE_PACKET, null, values);
+        // Logger.i("addPacketRecord", Long.toString(record.dbId));
         return record;
     }
 
     public PacketRecord getPacketRecord(long packetId) {
+        // Logger.i("getPacketRecord", Long.toString(packetId));
+
         PacketRecord record = null;
         Cursor cursor = mDB.query(TABLE_PACKET, new String[]{KEY_PACKET_DOMAIN, KEY_PACKET_IP,
                         KEY_PACKET_PORT, KEY_PACKET_TYPE, KEY_PACKET_PATH, KEY_PACKET_QUERY, KEY_PACKET_FRAGMENT, KEY_PACKET_PAYLOAD, KEY_PACKET_TIME},
@@ -361,7 +363,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             if (cursor.moveToFirst()) {
                 record = new PacketRecord(cursor.getString(0), cursor.getString(1),
                         cursor.getInt(2), cursor.getString(3), cursor.getString(4),
-                        cursor.getString(5), cursor.getString(6), cursor.getString(3));
+                        cursor.getString(5), cursor.getString(6), cursor.getString(7), cursor.getString(8));
             }
             cursor.close();
         }

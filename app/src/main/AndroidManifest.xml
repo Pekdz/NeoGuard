@@ -122,7 +122,7 @@
         <activity
             android:name=".Application.Activities.PacketDetails"
             android:label="@string/title_activity_packet_details" />
-        <activity android:name=".Application.Activities.PacketDetail"></activity>
+        <activity android:name=".Application.Activities.PacketDetailActivity"></activity>
     </application>
 
 </manifest>

@@ -74,7 +74,12 @@ public class CryptoDetailActivity extends AppCompatActivity {
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                // URLTrace url = (URLTrace) parent.getItemAtPosition(position);
+                CryptominerAlert alert = (CryptominerAlert) parent.getItemAtPosition(position);
+                Intent intent;
+                intent = new Intent(CryptoDetailActivity.this, PacketDetailActivity.class);
+
+                intent.putExtra(PrivacyGuard.EXTRA_REF_PACKETID, alert.getRefPacketId());
+                startActivity(intent);
             }
         });
     }

@@ -21,6 +21,7 @@ public class PrivacyGuard extends Application {
     public final static String EXTRA_IGNORE = "PrivacyGuard.ignore";
     public final static String EXTRA_SIZE = "PrivacyGuard.SIZE";
     public final static String EXTRA_DATE_FORMAT = "PrivacyGuard.DATE";
+    public final static String EXTRA_REF_PACKETID = "PrivacyGuard.refPacketId";
     public static boolean doFilter = true;
     public static boolean asynchronous = true;
     public static int tcpForwarderWorkerRead = 0;

@@ -58,10 +58,10 @@ public class DGADetector {
         return instance;
     }
 
-    // can be overridden for another threshold heuristic implementation
+    /*// can be overridden for another threshold heuristic implementation
     protected double getThreshold(double minGood, double maxBad) {
         return (minGood + maxBad) / 2;
-    }
+    }*/
 
     private void initializePositionMap() {
 

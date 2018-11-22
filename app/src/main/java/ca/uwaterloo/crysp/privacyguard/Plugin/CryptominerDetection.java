@@ -125,21 +125,53 @@ public class CryptominerDetection implements IPlugin {
 
             return signature;
         }
-
+        //check json object schema
+        private boolean checkJsonSchema(JSONObject obj) {
+            Iterator<String> keys = obj.keys();
+            List<String> keysList = new ArrayList<String>();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                keysList.add(key);
+            }
+            if(keysList.size() != 2) {
+                return false;
+            }
+            else {
+                if(keysList.contains("type") && keysList.contains("params")) {
+                    try {
+                        JSONObject sub_obj = obj.getJSONObject("params");
+                        Iterator<String> sub_keys = sub_obj.keys();
+                        List<String> sub_keysList = new ArrayList<String>();
+                        while (sub_keys.hasNext()) {
+                            String sub_key = sub_keys.next();
+                            sub_keysList.add(sub_key);
+                        }
+                        if(sub_keysList.size() != 5) {
+                            return false;
+                        }
+                        else {
+                            if(sub_keysList.contains("version") && sub_keysList.contains("site_key") && sub_keysList.contains("type")
+                                    && sub_keysList.contains("user") && sub_keysList.contains("goal")) {
+                                return true;
+                            }
+                            else {
+                                return false;
+                            }
+                        }
+                    } catch (JSONException e) {
+                        return false;
+                    }
+                }
+                else {
+                    return false;
+                }
+            }
+        }
         //check coinhive websocket payload pattern
         private boolean checkCoinHive(String payload) {
-            boolean hasBlob = false;
-            boolean hasTarget = false;
             try {
                 JSONObject ws_obj = new JSONObject(payload);
-                Iterator<String> keys = ws_obj.keys();
-                while (keys.hasNext()) {
-                    String key = keys.next();
-                    if (!hasBlob) hasBlob = key.equals("blob");
-                    if (!hasTarget) hasTarget = key.equals("target");
-                    if (hasBlob && hasTarget) return true;
-                }
-                return false;
+                return checkJsonSchema(ws_obj);
             } catch (JSONException e) {
                 // e.printStackTrace();
                 return false;

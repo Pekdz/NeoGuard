@@ -1,5 +1,7 @@
 package ca.uwaterloo.crysp.privacyguard.Plugin;
 
+import android.util.Log;
+
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -122,6 +124,15 @@ public class DGADetector {
      * @return true if the sentence is gibberish, false otherwise.
      */
     public boolean isDGA(String line) {
-        return !(getAvgTransitionProbability(line, logProbabilityMatrix) > threshold);
+        boolean retval =false;
+        String[] temp = line.split("\\.");
+        String domain = temp[1];
+        Log.d("Domain", domain);
+        if (domain.length()>6) {
+            if(getAvgTransitionProbability(domain, logProbabilityMatrix) < threshold){
+                retval=true;
+            }
+        }
+        return retval;
     }
 }

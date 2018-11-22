@@ -3,12 +3,11 @@ package ca.uwaterloo.crysp.privacyguard.Application.Activities;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.EditText;
+import android.text.method.ScrollingMovementMethod;
 import android.widget.TextView;
 
 import ca.uwaterloo.crysp.privacyguard.Application.Database.DatabaseHandler;
 import ca.uwaterloo.crysp.privacyguard.Application.Database.PacketRecord;
-import ca.uwaterloo.crysp.privacyguard.Application.Logger;
 import ca.uwaterloo.crysp.privacyguard.Application.PrivacyGuard;
 import ca.uwaterloo.crysp.privacyguard.R;
 
@@ -16,8 +15,8 @@ public class PacketDetailActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        TextView tvDomain, tvType, tvTimestamp, tvPath, tvFragment;
-        EditText etQuery, etPayload;
+        TextView tvDomain, tvIP, tvType, tvTimestamp, tvPath, tvFragment, tvQuery, tvPayload;
+
         StringBuilder sb = new StringBuilder();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_packet_detail);
@@ -31,23 +30,27 @@ public class PacketDetailActivity extends Activity {
 
         PacketRecord record = db.getPacketRecord(id);
         // Logger.d("PacketDetail: ", record.toString());
-
         tvDomain = findViewById(R.id.tvDomain);
+        tvIP = findViewById(R.id.tvIP);
         tvType = findViewById(R.id.tvType);
         tvTimestamp = findViewById(R.id.tvTimeStamp);
         tvPath = findViewById(R.id.tvPath);
+        tvPath.setMovementMethod(new ScrollingMovementMethod());
         tvFragment = findViewById(R.id.tvFragment);
 
-        etQuery = findViewById(R.id.etQuery);
-        etPayload = findViewById(R.id.etPayload);
+        tvQuery = findViewById(R.id.tvQuery);
+        tvQuery.setMovementMethod(new ScrollingMovementMethod());
+
+        tvPayload = findViewById(R.id.tvPayload);
+        tvPayload.setMovementMethod(new ScrollingMovementMethod());
         if (record.domain != null) {
-            setTitle(record.domain);
+            tvDomain.setText(record.domain);
         }
         sb.append(record.destIp);
         sb.append(":");
         sb.append(record.destPort);
         if (sb != null) {
-            tvDomain.setText(sb);
+            tvIP.setText(sb);
         }
         if (record.type != null) {
             tvType.setText(record.type);
@@ -61,11 +64,20 @@ public class PacketDetailActivity extends Activity {
         if (record.fragment != null) {
             tvFragment.setText(record.fragment);
         }
-        if (record.query != null) {
-            etQuery.setText(record.query);
+        else{
+            tvFragment.setText("No Fragment");
         }
-        if (record.payload != null) {
-            etPayload.setText(record.payload);
+        if (record.query != null) {
+            tvQuery.setText(record.query);
+        }
+        else{
+            tvQuery.setText("No Query");
+        }
+        if ((record.payload != null)&&(!record.payload.equals(""))) {
+            tvPayload.setText(record.payload);
+        }
+        else{
+            tvPayload.setText(" No Content");
         }
 
 

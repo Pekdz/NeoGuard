@@ -67,11 +67,6 @@
             android:screenOrientation="portrait"/>
 
         <activity
-            android:name="ca.uwaterloo.crysp.privacyguard.Application.Activities.URLDetailActivity"
-            android:parentActivityName="ca.uwaterloo.crysp.privacyguard.Application.Activities.AppSummaryActivity"
-            android:screenOrientation="portrait"/>
-
-        <activity
             android:name="ca.uwaterloo.crysp.privacyguard.Application.Activities.DomainDetailActivity"
             android:parentActivityName="ca.uwaterloo.crysp.privacyguard.Application.Activities.AppSummaryActivity"
             android:screenOrientation="portrait"/>

@@ -72,8 +72,6 @@ public class AppSummaryActivity extends AppCompatActivity {
                 Intent intent;
                 if(category.category.equalsIgnoreCase("location")){
                     intent = new Intent(AppSummaryActivity.this, LocationDetailActivity.class);
-                } else if (category.category.equalsIgnoreCase("url")) {
-                    intent = new Intent(AppSummaryActivity.this, URLDetailActivity.class);
                 } else if (category.category.equalsIgnoreCase("domain")) {
                     intent = new Intent(AppSummaryActivity.this, DomainDetailActivity.class);
                 } else if (category.category.equalsIgnoreCase("cryptominer")) {

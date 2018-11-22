@@ -16,7 +16,6 @@ import java.util.List;
 
 import ca.uwaterloo.crysp.privacyguard.Application.Database.DatabaseHandler;
 import ca.uwaterloo.crysp.privacyguard.Application.Database.DomainAlert;
-import ca.uwaterloo.crysp.privacyguard.Application.Database.URLTrace;
 import ca.uwaterloo.crysp.privacyguard.Application.PrivacyGuard;
 import ca.uwaterloo.crysp.privacyguard.R;
 
@@ -75,7 +74,7 @@ public class DomainDetailActivity extends AppCompatActivity {
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                URLTrace url = (URLTrace) parent.getItemAtPosition(position);
+                // URLTrace url = (URLTrace) parent.getItemAtPosition(position);
             }
         });
     }

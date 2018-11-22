@@ -62,7 +62,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     public String[] getTables() {
-        return new String[]{TABLE_DATA_LEAKS, TABLE_LEAK_SUMMARY, TABLE_URL, TABLE_APP_STATUS_EVENTS,
+        return new String[]{TABLE_DATA_LEAKS, TABLE_LEAK_SUMMARY, TABLE_APP_STATUS_EVENTS,
                 TABLE_TRAFFIC_SUMMARY, TABLE_CRYPTO_ALERT, TABLE_DOMAIN_ALERT, TABLE_PACKET};
     }
 
@@ -78,7 +78,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.execSQL(CREATE_LEAK_SUMMARY_TABLE);
         db.execSQL(CREATE_APP_STATUS_TABLE);
         // w3kim@uwaterloo.ca
-        db.execSQL(CREATE_URL_TABLE);
         db.execSQL(CREATE_TRAFFIC_TABLE);
         db.execSQL(CREATE_PACKET_TABLE);
         db.execSQL(CREATE_DOMAIN_TABLE);
@@ -93,7 +92,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_LEAK_SUMMARY);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_APP_STATUS_EVENTS);
         // w3kim@uwaterloo.ca
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_URL);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_TRAFFIC_SUMMARY);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_PACKET);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_DOMAIN_ALERT);
@@ -134,28 +132,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             + KEY_HOSTNAME + " TEXT)";
 
     private static final String TAG = DatabaseHandler.class.getSimpleName();
-
-    // URL Table Name
-    private static final String TABLE_URL = "urls";
-    private static final String KEY_URL_ID = "_id";
-    private static final String KEY_URL_APP_NAME = "app_name";
-    private static final String KEY_URL_PACKAGE = "package_name";
-    private static final String KEY_URL_URL = "url";
-    private static final String KEY_URL_HOST = "host";
-    private static final String KEY_URL_RES = "res";
-    private static final String KEY_URL_QUERY_PARAMS = "query_params";
-
-    private static final String KEY_URL_TIMESTAMP = "_timestamp";
-
-    private static final String CREATE_URL_TABLE = "CREATE TABLE " + TABLE_URL + "("
-            + KEY_URL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-            + KEY_URL_APP_NAME + " TEXT,"
-            + KEY_URL_PACKAGE + " TEXT,"
-            + KEY_URL_URL + " TEXT,"
-            + KEY_URL_HOST + " TEXT,"
-            + KEY_URL_RES + " TEXT,"
-            + KEY_URL_QUERY_PARAMS + " TEXT,"
-            + KEY_URL_TIMESTAMP + " TEXT )";
 
     // Packet record table
     private static final String TABLE_PACKET = "packets";
@@ -359,20 +335,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return traffics;
     }
 
-    // w3kim@uwaterloo.ca
-    private void addUrl(String appName, String packageName, String url, String host, String res, String queryParams) {
-        ContentValues values = new ContentValues();
-        values.put(KEY_URL_PACKAGE, packageName);
-        values.put(KEY_URL_APP_NAME, appName);
-        values.put(KEY_URL_TIMESTAMP, DATE_FORMAT.format(new Date()));
-        values.put(KEY_URL_HOST, host);
-        values.put(KEY_URL_RES, res);
-        values.put(KEY_URL_QUERY_PARAMS, queryParams);
-        values.put(KEY_URL_URL, url);
-
-        mDB.insert(TABLE_URL, null, values);
-    }
-
     public PacketRecord addPacketRecord(PacketRecord record) {
         ContentValues values = new ContentValues();
         values.put(KEY_PACKET_DOMAIN, record.domain);
@@ -410,7 +372,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         mDB.delete(TABLE_DATA_LEAKS, KEY_PACKAGE + "=?", new String[] {packageName});
         mDB.delete(TABLE_LEAK_SUMMARY, KEY_PACKAGE + "=?", new String[] {packageName});
         mDB.delete(TABLE_APP_STATUS_EVENTS, KEY_PACKAGE + "=?", new String[] {packageName});
-        mDB.delete(TABLE_URL, KEY_URL_PACKAGE + "=?", new String[] {packageName});
+        mDB.delete(TABLE_PACKET, KEY_PACKAGE + "=?", new String[] {packageName});
+        mDB.delete(TABLE_DOMAIN_ALERT, KEY_PACKAGE + "=?", new String[] {packageName});
+        mDB.delete(TABLE_CRYPTO_ALERT, KEY_PACKAGE + "=?", new String[] {packageName});
     }
 
     // Adding new data leak
@@ -555,14 +519,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             }
             cursor.close();
         }
-        // Trace Report
-        Cursor mCount = mDB.rawQuery("select count(*) from " + TABLE_URL + " where " + KEY_URL_PACKAGE + "='" + packageName + "'", null);
-        if (cursor != null) {
-            mCount.moveToFirst();
-            int count = mCount.getInt(0);
-            mCount.close();
-            categories.add(new CategorySummary(100, "URL", count, 1));
-        }
 
         return categories;
     }
@@ -647,24 +603,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return cryptoAlerts;
     }
 
-    public List<URLTrace> getUrlTraces(String packageName) {
-        List<URLTrace> urlList = new ArrayList<>();
-        Cursor cursor = mDB.query(TABLE_URL, new String[]{KEY_URL_PACKAGE, KEY_URL_APP_NAME, KEY_URL_URL, KEY_URL_QUERY_PARAMS, KEY_URL_HOST, KEY_URL_RES, KEY_URL_TIMESTAMP},
-                KEY_PACKAGE + "=?", new String[]{packageName},
-                null, null, null);
-        if (cursor != null) {
-            if (cursor.moveToFirst()) {
-                do {
-                    URLTrace leak = new URLTrace(cursor.getString(0), cursor.getString(1), "URL", cursor.getString(2), cursor.getString(3), cursor.getString(4), cursor.getString(5), cursor.getString(6));
-                    urlList.add(leak);
-                } while (cursor.moveToNext());
-            }
-            cursor.close();
-        }
-        return urlList;
-    }
-
-    // w3kim@uwaterloo.ca : simple helper
     private boolean isHttpMethod(String s) {
         return s.equals("GET")
                 || s.equals("POST")
@@ -673,57 +611,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 || s.equals("CONNECT")
                 || s.equals("DELETE")
                 || s.equals("OPTIONS");
-    }
-
-    /**
-     * [w3kim@uwaterloo.ca]
-     * Parse an URL and Record in Naive Way
-     *
-     * @param appName app identifier
-     * @param packageName app package name
-     * @param request network request string
-     * @return true iff there is a parsable URL present in request
-     */
-    public boolean addUrlIfAny(String appName, String packageName, String request) {
-        if (request == null
-                || request.isEmpty()
-                || !isHttpMethod(request.trim().split("\n")[0].split(" ")[0])) {
-            return false;
-        }
-        String statusLine = null;
-        String hostLine = null;
-        try {
-            Scanner scanner = new Scanner(request);
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine().trim();
-                if (isHttpMethod(line.split(" ")[0])) {
-                    statusLine = line;
-                } else if (line.startsWith("Host")) {
-                    hostLine = line;
-                }
-            }
-            if (statusLine != null && hostLine != null) {
-                Matcher matcher = Patterns.WEB_URL.matcher(hostLine);
-                if (matcher.find()) {
-                    String[] statusLineTokens = statusLine.split(" ");
-                    String resWithParams = statusLineTokens[1];
-
-                    int queryParamsStart = resWithParams.indexOf('?');
-                    int cut = (queryParamsStart < 0) ? resWithParams.length() : queryParamsStart;
-                    String res = resWithParams.substring(0, cut);
-                    String queryParams = (queryParamsStart < 0) ? "" : resWithParams.substring(res.length() + 1);
-
-                    String host = matcher.group();
-                    addUrl(appName, packageName, host + res + '?' + queryParams, host, res, queryParams);
-                    return true;
-                }
-            }
-        } catch (Exception e) {
-            // just in case
-            Logger.e(TAG, "Failed to parse an URL (appName=" + appName + ", packageName=" + packageName + "): " + e.getMessage());
-        }
-
-        return false;
     }
 
     /**

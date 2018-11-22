@@ -68,10 +68,6 @@
     <string name="content_label_colon">Content:</string>
     <string name="status_label_colon">Status:</string>
 
-    <!-- URLTrace -->
-    <string name="url_label">URI</string>
-    <string name="host_label">Host</string>
-
     <!-- Leak Categories -->
     <string name="location_category">Location</string>
     <string name="contact_category">Contact</string>

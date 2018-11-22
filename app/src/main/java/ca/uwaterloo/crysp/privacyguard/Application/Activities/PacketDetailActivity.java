@@ -21,6 +21,7 @@ public class PacketDetailActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_packet_detail);
         DatabaseHandler db = DatabaseHandler.getInstance(this);
+        
         // get value from intent
         Intent intent = getIntent();
         long id = intent.getLongExtra(PrivacyGuard.EXTRA_REF_PACKETID, -1);

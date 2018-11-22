@@ -111,7 +111,8 @@
 
         <activity
             android:name=".Application.Activities.PacketDetails"
-            android:label="@string/title_activity_packet_details"></activity>
+            android:label="@string/title_activity_packet_details" />
+        <activity android:name=".Application.Activities.PacketDetail"></activity>
     </application>
 
 </manifest>

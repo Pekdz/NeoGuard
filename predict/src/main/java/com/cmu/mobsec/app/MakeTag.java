@@ -1,5 +1,8 @@
 package com.cmu.mobsec.app;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ejml.simple.SimpleMatrix;
 
 /**
@@ -10,10 +13,10 @@ public class MakeTag
 {
 	static int D = 10;  // hidden unit count
 	static int M = 15;  // feature and bias count 
-	static double[][] meanTmp = {{0, 8974451.32222, 6.22974892759, 6.22159583094, 566.216214718, 6162.17917062, 325.96969529, 40.4231883355,
-		                          140.848750182, 17.1641048919, 16.6411320781, 362.783591243, 85.5465700982, 107.55426347, 64072.3036614}};
-	static double[][] subTmp = {{1, 119999938, 22672, 44553, 12900000, 63600000, 11680, 1543, 23360, 2065, 1306, 23360, 2417.842105,
-		                         3439.674248, 11800000.0}};
+	static double[][] meanTmp = {{0, 17242957.5991, 10.4651709402, 11.8658119658, 3620.8292735, 11670.4899573, 393.924145299, 3.29743589744, 
+		                          294.190811966, 4.37136752137, 0.664743589744, 479.807264957, 146.178881081, 185.348869593, 94009.5929592}};
+	static double[][] subTmp = {{1, 119988082, 8670, 2651, 12490948.0, 3762632.0, 1460.0, 1418.0, 1460.0, 1460.0, 315, 1460, 1260.56085106, 
+		                         799.674933958, 639480.0}};
 
 	static double[][] alphaTmp = new double[][] 
 				{{-3.532, -0.008, -0.290, 0.734, 0.073, -0.837, -8.222, -11.090, -2.860, -3.078, -5.162, -8.716, -7.069, -11.586, 0.751},
@@ -34,10 +37,17 @@ public class MakeTag
     static SimpleMatrix beta = new SimpleMatrix(betaTmp);
     static SimpleMatrix mean = new SimpleMatrix(meanTmp);
     static SimpleMatrix sub = new SimpleMatrix(subTmp);
+    static MakeTag instance;
 	public MakeTag() {
 
        
 	}
+	static public MakeTag getInstance() {
+		if (instance == null) {
+			instance = new MakeTag();
+		}
+		return instance;
+	} 
 	public static SimpleMatrix sigmoid(SimpleMatrix values) {
         for (int i = 0; i < values.numRows() * values.numCols(); i++) {
             values.set(i, 1 / (1 + Math.exp(-values.get(i))));
@@ -59,11 +69,29 @@ public class MakeTag
 		for (int i = 0; i < values.numRows() * values.numCols(); i++) {
             values.set(i, (values.get(i) - mean.get(i)) / sub.get(i));
         }
-//		System.out.println(values);
         return values;
 	}
+	
+	// The API used with adding bias and transferred to matrix
 	public static int MakeSingleTag(SimpleMatrix X) {
 		SimpleMatrix n_X = Normalize(X);
+		SimpleMatrix A = getA(n_X);
+		SimpleMatrix Z = sigmoid(A);
+		SimpleMatrix B = getB(Z,2);
+		if (B.get(0) > B.get(1)) {
+			return 0;
+		}
+		return 1;
+	}
+	
+	// The API used without adding bias(Input is the raw network flow)
+	public static int GetTag(List<Double> X) {
+		double[][] matrixX = new double[1][X.size() + 1];
+		matrixX[0][0] = 1.0;
+		for (int i = 1; i < X.size() + 1; i++) {
+			matrixX[0][i] = X.get(i - 1);
+		}
+		SimpleMatrix n_X = Normalize(new SimpleMatrix(matrixX));
 		SimpleMatrix A = getA(n_X);
 		SimpleMatrix Z = sigmoid(A);
 		SimpleMatrix B = getB(Z,2);
@@ -76,13 +104,20 @@ public class MakeTag
     public static void main( String[] args )
     {
 
-//        double[][] X = {{1,3,2,0,2,0,6,6,6,0,0,0,0,0,4}};
-//    	double[][] X = {{1.00000000e+00,   6.45648057e-02,   3.39736712e-05,   1.74714199e-05,
-//    		             4.10685105e-05,  -7.78015593e-05,   2.32902658e-02,  -2.61977889e-02,
-//    		             1.69157213e-02,  -8.31191520e-03,  -1.27420613e-02,   1.00691956e-02,
-//    		             2.83117867e-02,   4.38355350e-02,   2.25785404e-04}};
-    	double[][] X = {{1,83,1,2,0,0,0,0,0,0,0,0,0,0,0}};
-        int tag = MakeTag.MakeSingleTag(new SimpleMatrix(X));
+        // normal flow test
+//    	double[] X = new double[] {564975.0, 12.0, 11.0, 1193.0, 4650.0, 1418.0, 0.0, 916.0, 
+//    			                   0.0, 0.0, 1418.0, 243.45833333333337, 440.2825159378688, 
+//    			                   193848.69384057968};
+    	
+    	// malicious flow test
+    	double[] X = new double[] {40.0, 2.0, 0.0, 42.0, 0.0, 0.0, 0.0, 42.0, 0.0, 0.0, 
+    			                  42.0, 28.0, 24.248711305964278, 588.0};
+    	
+    	ArrayList<Double> input = new ArrayList<Double>();
+    	for (double i : X) {
+    		input.add(i);
+    	}
+        int tag = MakeTag.GetTag(input);
         if (tag == 0) {
         	System.out.println("normal flow");
         } else {

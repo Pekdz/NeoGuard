@@ -28,6 +28,7 @@ public class PacketRecord {
         this.payload = payload;
         SimpleDateFormat formatter = new SimpleDateFormat("MM/dd HH:mm:ss");
         this.time = formatter.format(new Date());
+        this.dbId = -1;
     }
 
     public PacketRecord(String domain, String destIp, int destPort, String type,
@@ -41,6 +42,7 @@ public class PacketRecord {
         this.fragment = fragment;
         this.payload = payload;
         this.time = time;
+        this.dbId = -1;
     }
 
     @Override

@@ -52,7 +52,7 @@ public class PreInspectionPlugin implements IPlugin {
                         }
                     }
                 }
-            } else if (metaData.protocol != L7Protocol.WEBSOCKET && metaData.outgoing) {
+            } else if (metaData.protocol == L7Protocol.WEBSOCKET && metaData.outgoing) {
                 String wsPayload = dpi.getWebsocketPayload(rawRequest);
                 if (wsPayload == null)
                     wsPayload = "Empty";

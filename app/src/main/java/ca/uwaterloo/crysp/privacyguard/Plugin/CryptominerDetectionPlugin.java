@@ -14,49 +14,46 @@ import java.util.List;
 import java.util.Set;
 
 import ca.uwaterloo.crysp.privacyguard.Application.Database.DatabaseHandler;
-import ca.uwaterloo.crysp.privacyguard.Application.Database.PacketRecord;
 import ca.uwaterloo.crysp.privacyguard.Application.Logger;
 import ca.uwaterloo.crysp.privacyguard.Application.Network.ConnectionMetaData;
-import ca.uwaterloo.crysp.privacyguard.Application.Network.DPI;
 import ca.uwaterloo.crysp.privacyguard.Application.Network.L7Protocol;
 
 
-public class CryptominerDetection implements IPlugin {
+public class CryptominerDetectionPlugin implements IPlugin {
     private final boolean DEBUG = true;
-    private final String TAG = CryptominerDetection.class.getSimpleName();
+    private final String TAG = CryptominerDetectionPlugin.class.getSimpleName();
     private DatabaseHandler db;
-    private DPI dpi;
     private HelperTool tool;
 
     @Override
     @Nullable
     public LeakReport handleRequest(String request, byte[] rawRequest, ConnectionMetaData metaData) {
         try {
-            if (metaData.protocol == L7Protocol.WEBSOCKET && metaData.outgoing) {
+            if (metaData.protocol == L7Protocol.WEBSOCKET) {
                 ArrayList<LeakInstance> leaks = new ArrayList<>();
-                String wsPayload = dpi.getWebsocketPayload(rawRequest);
-                if (DEBUG) {
-                    Logger.i(TAG, metaData.appName + " ===== WebSocket ======="
-                            + "\nDomain => " + metaData.destHostName
-                            + "\nPayload => " + wsPayload
-                            + "\n ===========");
-                }
 
-                // check for cyptominer
-                boolean domainIsMiningPool = tool.isMiningPool(metaData.destHostName);
-                String signatureName = tool.getSignature(wsPayload);
+                if (metaData.currentPacket != null) {
+                    String wsPayload = metaData.currentPacket.payload;
 
-                if (domainIsMiningPool || !signatureName.equals("N/A")) {
-                    // check packet record isn't saved to database
-                    if (metaData.currentPacket == null) {
-                        metaData.currentPacket = db.addPacketRecord(new PacketRecord(metaData.destHostName,
-                                metaData.destIP, metaData.destPort, "Websocket",
-                                null, null, null, wsPayload));
+                    // check for cyptominer
+                    boolean domainIsMiningPool = tool.isMiningPool(metaData.destHostName);
+                    String signatureName = tool.getSignature(wsPayload);
+
+                    if (DEBUG) {
+                        Logger.i(TAG, "Cryptominer Result => isPool: " + domainIsMiningPool
+                                + ", signature: " + signatureName);
                     }
 
-                    LeakInstance leak = new CryptominerInstance("Cyptominer detected", metaData.destHostName,
-                            metaData.currentPacket.dbId, domainIsMiningPool, signatureName, metaData.currentPacket.time);
-                    leaks.add(leak);
+                    if (domainIsMiningPool || !signatureName.equals("N/A")) {
+                        // check packet record isn't saved to database
+                        if (metaData.currentPacket.dbId == -1) {
+                            metaData.currentPacket = db.addPacketRecord(metaData.currentPacket);
+                        }
+
+                        LeakInstance leak = new CryptominerInstance("Cyptominer detected", metaData.destHostName,
+                                metaData.currentPacket.dbId, domainIsMiningPool, signatureName, metaData.currentPacket.time);
+                        leaks.add(leak);
+                    }
                 }
 
                 if (leaks.isEmpty())
@@ -92,7 +89,6 @@ public class CryptominerDetection implements IPlugin {
     @Override
     public void setContext(Context context) {
         db = DatabaseHandler.getInstance(context);
-        dpi = DPI.getInstance();
         tool = HelperTool.getInstance();
     }
 

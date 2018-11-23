@@ -10,58 +10,47 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.telephony.SmsMessage;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ca.uwaterloo.crysp.privacyguard.Application.Database.DatabaseHandler;
-import ca.uwaterloo.crysp.privacyguard.Application.Database.PacketRecord;
 import ca.uwaterloo.crysp.privacyguard.Application.Logger;
 import ca.uwaterloo.crysp.privacyguard.Application.Network.ConnectionMetaData;
-import ca.uwaterloo.crysp.privacyguard.Application.Network.DPI;
-import ca.uwaterloo.crysp.privacyguard.Application.Network.L7Protocol;
-import rawhttp.core.RawHttpRequest;
 
-public class SMSDetection extends BroadcastReceiver implements IPlugin {
-    private final String TAG = "SMSDetection";
+
+public class SMSDetectionPlugin extends BroadcastReceiver implements IPlugin {
+    private final String TAG = "SMSDetectionPlugin";
     private final boolean DEBUG = false;
     private static boolean init = false;
     private DatabaseHandler db;
-    private DPI dpi;
     private HashSet<String> smsList = new HashSet<>();
 
     @Override
     @Nullable
     public LeakReport handleRequest(String request, byte[] rawRequest, ConnectionMetaData metaData) {
-        ArrayList<LeakInstance> leaks = new ArrayList<>();
+        try {
+            ArrayList<LeakInstance> leaks = new ArrayList<>();
 
-        long refPacketId = -1;
-        if (metaData.currentPacket != null) {
-            refPacketId = metaData.currentPacket.dbId;
-        } else if (metaData.protocol == L7Protocol.HTTP) {
-            RawHttpRequest httpReq = dpi.parseHttpRequest(request);
-            if (httpReq != null) {
-                URI uri = httpReq.getUri();
-                metaData.currentPacket = db.addPacketRecord(new PacketRecord(uri.getAuthority(),
-                        metaData.destIP, metaData.destPort, "HTTP - " + httpReq.getMethod(),
-                        uri.getPath(), uri.getQuery(), uri.getFragment(), request));
+            long refPacketId = -1;
+            for (String sms_code : smsList) {
+                if (request.contains(sms_code)) {
+                    if (refPacketId == -1 && metaData.currentPacket != null) {
+                        refPacketId = db.addPacketRecord(metaData.currentPacket).dbId;
+                    }
+                    leaks.add(new LeakInstance("Leak Verification Code", sms_code, refPacketId));
+                }
             }
-            refPacketId = metaData.currentPacket.dbId;
-        }
-
-        for (String sms_code : smsList) {
-            if (request.contains(sms_code)) {
-                leaks.add(new LeakInstance("Leak Verification Code", sms_code, refPacketId));
+            if (leaks.isEmpty()) {
+                return null;
             }
-        }
-        if (leaks.isEmpty()) {
+            LeakReport rpt = new LeakReport(LeakReport.LeakCategory.SMS);
+            rpt.addLeaks(leaks);
+            return rpt;
+        } catch (Exception e) {
             return null;
         }
-        LeakReport rpt = new LeakReport(LeakReport.LeakCategory.SMS);
-        rpt.addLeaks(leaks);
-        return rpt;
     }
 
     @Override
@@ -85,7 +74,6 @@ public class SMSDetection extends BroadcastReceiver implements IPlugin {
             if (init) return;
 
             db = DatabaseHandler.getInstance(context);
-            dpi = DPI.getInstance();
             init = true;
             getSMS(context.getContentResolver());
         }

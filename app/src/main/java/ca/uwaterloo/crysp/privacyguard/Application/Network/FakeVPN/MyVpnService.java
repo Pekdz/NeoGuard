@@ -34,9 +34,10 @@ import android.support.v4.app.NotificationCompat;
 
 import ca.uwaterloo.crysp.privacyguard.Application.ActionReceiver;
 import ca.uwaterloo.crysp.privacyguard.Application.Activities.AppSummaryActivity;
-import ca.uwaterloo.crysp.privacyguard.Plugin.CryptominerDetection;
-import ca.uwaterloo.crysp.privacyguard.Plugin.DomainDetection;
-import ca.uwaterloo.crysp.privacyguard.Plugin.SMSDetection;
+import ca.uwaterloo.crysp.privacyguard.Plugin.CryptominerDetectionPlugin;
+import ca.uwaterloo.crysp.privacyguard.Plugin.DomainDetectionPlugin;
+import ca.uwaterloo.crysp.privacyguard.Plugin.PreInspectionPlugin;
+import ca.uwaterloo.crysp.privacyguard.Plugin.SMSDetectionPlugin;
 import ca.uwaterloo.crysp.privacyguard.R;
 import ca.uwaterloo.crysp.privacyguard.Application.Database.DatabaseHandler;
 import ca.uwaterloo.crysp.privacyguard.Application.Logger;
@@ -90,13 +91,14 @@ public class MyVpnService extends VpnService implements Runnable {
 
     // Plugin
     private Class pluginClass[] = {
-            //LocationDetection.class,
-            //DeviceDetection.class,
+            PreInspectionPlugin.class,
+            //LocationDetectionPlugin.class,
+            //DeviceDetectionPlugin.class,
             //ContactDetection.class,
-            //KeywordDetection.class,
-            DomainDetection.class,
-            CryptominerDetection.class,
-            SMSDetection.class
+            //KeywordDetectionPlugin.class,
+            DomainDetectionPlugin.class,
+            CryptominerDetectionPlugin.class,
+            SMSDetectionPlugin.class
     };
     private ArrayList<IPlugin> plugins;
 

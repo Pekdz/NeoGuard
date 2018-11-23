@@ -178,6 +178,7 @@ public class DGADetector {
             if (getAvgTransitionProbability(domain, logProbabilityMatrix) < threshold) {
                 retval = true;
             }
+            
         }
         return retval;
     }

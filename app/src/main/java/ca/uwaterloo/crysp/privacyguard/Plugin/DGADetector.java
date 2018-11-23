@@ -396,8 +396,6 @@ public class DGADetector {
         }
     }
 
-    static class Result {
-
     private class asyncAPI extends AsyncTask<String,Void ,Integer>{
         String TAG="asyncAPI";
 
@@ -483,7 +481,8 @@ public class DGADetector {
             }
         }
     }
-    class Result {
+
+    static class Result {
         double score;
         boolean isDGA;
     }

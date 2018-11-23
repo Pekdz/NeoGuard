@@ -468,6 +468,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 3;
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 4;
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_COURSE_LOCATION = 5;
+    private static final int MY_PERMISSIONS_REQUEST_READ_SMS = 6;
+    private static final int MY_PERMISSIONS_REQUEST_RECEIVE_SMS = 7;
 
     /**
      * Requests permissions if they are not granted.
@@ -517,6 +519,20 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
 
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_SMS},
+                    MY_PERMISSIONS_REQUEST_READ_SMS);
+            return false;
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.RECEIVE_SMS},
+                    MY_PERMISSIONS_REQUEST_RECEIVE_SMS);
+            return false;
+        }
+
         return true;
     }
 
@@ -547,6 +563,14 @@ public class MainActivity extends AppCompatActivity {
             }
             case MY_PERMISSIONS_REQUEST_ACCESS_COURSE_LOCATION: {
                 permission = Manifest.permission.ACCESS_COARSE_LOCATION;
+                break;
+            }
+            case MY_PERMISSIONS_REQUEST_READ_SMS: {
+                permission = Manifest.permission.READ_SMS;
+                break;
+            }
+            case MY_PERMISSIONS_REQUEST_RECEIVE_SMS: {
+                permission = Manifest.permission.RECEIVE_SMS;
                 break;
             }
         }

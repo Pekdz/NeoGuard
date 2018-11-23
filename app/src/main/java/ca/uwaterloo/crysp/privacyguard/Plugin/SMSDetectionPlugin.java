@@ -30,8 +30,8 @@ public class SMSDetectionPlugin extends BroadcastReceiver implements IPlugin {
     private final String TAG = "SMSDetectionPlugin";
     private final boolean DEBUG = true;
     private static boolean init = false;
-    private DatabaseHandler db;
-    private HashSet<String> smsList = new HashSet<>();
+    private static DatabaseHandler db;
+    private static final HashSet<String> smsList = new HashSet<>();
 
     @Override
     @Nullable
@@ -80,7 +80,6 @@ public class SMSDetectionPlugin extends BroadcastReceiver implements IPlugin {
     public void setContext(Context context) {
         synchronized (smsList) {
             if (init) return;
-
             db = DatabaseHandler.getInstance(context);
             init = true;
             getSMS(context.getContentResolver());
@@ -101,15 +100,12 @@ public class SMSDetectionPlugin extends BroadcastReceiver implements IPlugin {
                         String name = sms.getColumnName(idx);
                         String sub_body = sms.getString(idx);
                         if(name.contains("body")) {
-                            //Log.i("sbody", sub_body);
                             msgData = sub_body;
                         }
                     }
-                    //Log.i("message", msgData);
                     String code = extractCode(msgData);
                     if (code != null) {
                         smsList.add(code);
-                        Log.i("has_code", code);
                     }
                 } while (sms.moveToNext());
             }

@@ -3,6 +3,11 @@ package ca.uwaterloo.crysp.privacyguard.Plugin;
 import android.util.Log;
 import android.os.AsyncTask;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.ArrayList;
@@ -13,6 +18,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.net.whois.WhoisClient;
+import org.json.JSONObject;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 /**
  * Class is largely based on  gibberish detector used to train and classify sentences as gibberish or not.
@@ -178,7 +191,6 @@ public class DGADetector {
             if (getAvgTransitionProbability(domain, logProbabilityMatrix) < threshold) {
                 retval = true;
             }
-
         }
         return retval;
     }
@@ -194,8 +206,7 @@ public class DGADetector {
         if (isDGA(domain)){
             domain_score = 30;
             AsyncWHOIS task = new AsyncWHOIS();
-            //InternetDomainName name = InternetDomainName.from(domain).topPrivateDomain();
-            //task.execute(name.toString());
+
             try {
                 dYear = task.execute(domain).get();
                 if (dYear==0) {
@@ -215,7 +226,16 @@ public class DGADetector {
                 domain_score -= 25;
             }
             ret.isDGA=true;
-            ret.score=domain_score;
+            ret.score+=domain_score;
+        }
+
+        //query if its bad domain, if yes +50
+        asyncAPI query = new asyncAPI();
+        try{
+            int res = query.execute(domain).get();
+            ret.score+=res;
+        }catch (Exception e){
+            e.printStackTrace();
         }
         //Sensitive NameServer if matches dynDNS, +15
 
@@ -224,6 +244,45 @@ public class DGADetector {
         return ret;
     }
 
+    private String getDom(String domain){
+        String TAG = "getDom";
+        String[] ccTLDs = {"ac","ad","ae","af","ag","ai","al","am","ao","aq","ar","as","at","au","aw","ax","az","ba","bb","bd","be","bf","bg","bh","bi","bj","bm","bn","bo","br","bs","bt","bw","by","bz","ca","cc","cd","cf","cg","ch","ci","ck","cl","cm","cn","co","cr","cu","cv","cw","cx","cy","cz","de","dj","dk","dm","do","dz","ec","ee","eg","er","es","et","eu","fi","fj","fk","fm","fo","fr","ga","gd","ge","gf","gg","gh","gi","gl","gm","gn","gp","gq","gr","gs","gt","gu","gw","gy","hk","hm","hn","hr","ht","hu","id","ie","il","im","in","io","iq","ir","is","it","je","jm","jo","jp","ke","kg","kh","ki","km","kn","kp","kr","kw","ky","kz","la","lb","lc","li","lk","lr","ls","lt","lu","lv","ly","ma","mc","md","me","mg","mh","mk","ml","mm","mn","mo","mp","mq","mr","ms","mt","mu","mv","mw","mx","my","mz","na","nc","ne","nf","ng","ni","nl","no","np","nr","nu","nz","om","pa","pe","pf","pg","ph","pk","pl","pm","pn","pr","ps","pt","pw","py","qa","re","ro","rs","ru","rw","sa","sb","sc","sd","se","sg","sh","si","sk","sl","sm","sn","so","sr","ss","st","sv","sx","sy","sz","tc","td","tf","tg","th","tj","tk","tl","tm","tn","to","tr","tt","tv","tw","tz","ua","ug","uk","us","uy","uz","va","vc","ve","vg","vi","vn","vu","wf","ws","ye","yt","za","zm","zw"};
+        String[] TLDs = {"com","net","org","info","biz","io","edu","gov"};
+
+        String[] d = domain.split("\\.");
+        StringBuilder sbDomain = new StringBuilder();
+        if(d.length>2){
+            List<String> clist = Arrays.asList(ccTLDs);
+            List<String> tlist = Arrays.asList(TLDs);
+            if ((clist.contains(d[d.length-1]))&&((tlist.contains(d[d.length-2])))){
+                // last entry is ccTLD && 2nd last is a valid TLD
+                sbDomain.append(d[d.length-3]);
+                sbDomain.append(".");
+                sbDomain.append(d[d.length-2]);
+                sbDomain.append(".");
+                sbDomain.append(d[d.length-1]);
+                // last entry is ccTLD && 2nd last is not a valid TLD
+            }
+            else if ((clist.contains(d[d.length-1]))&&(!(tlist.contains(d[d.length-2])))){
+                sbDomain.append(d[d.length-2]);
+                sbDomain.append(".");
+                sbDomain.append(d[d.length-1]);
+            }
+            else{
+                // last entry is not ccTLD
+                sbDomain.append(d[d.length-2]);
+                sbDomain.append(".");
+                sbDomain.append(d[d.length-1]);
+            }
+        }
+        else{
+            sbDomain.append(d[0]);
+            sbDomain.append(".");
+            sbDomain.append(d[1]);
+        }
+        Log.d(TAG,sbDomain.toString());
+        return sbDomain.toString();
+    }
     private class AsyncWHOIS extends AsyncTask<String,Void ,Integer>{
         String TAG="AsyncWHOIS";
         String[] ccTLDs = {"ac","ad","ae","af","ag","ai","al","am","ao","aq","ar","as","at","au","aw","ax","az","ba","bb","bd","be","bf","bg","bh","bi","bj","bm","bn","bo","br","bs","bt","bw","by","bz","ca","cc","cd","cf","cg","ch","ci","ck","cl","cm","cn","co","cr","cu","cv","cw","cx","cy","cz","de","dj","dk","dm","do","dz","ec","ee","eg","er","es","et","eu","fi","fj","fk","fm","fo","fr","ga","gd","ge","gf","gg","gh","gi","gl","gm","gn","gp","gq","gr","gs","gt","gu","gw","gy","hk","hm","hn","hr","ht","hu","id","ie","il","im","in","io","iq","ir","is","it","je","jm","jo","jp","ke","kg","kh","ki","km","kn","kp","kr","kw","ky","kz","la","lb","lc","li","lk","lr","ls","lt","lu","lv","ly","ma","mc","md","me","mg","mh","mk","ml","mm","mn","mo","mp","mq","mr","ms","mt","mu","mv","mw","mx","my","mz","na","nc","ne","nf","ng","ni","nl","no","np","nr","nu","nz","om","pa","pe","pf","pg","ph","pk","pl","pm","pn","pr","ps","pt","pw","py","qa","re","ro","rs","ru","rw","sa","sb","sc","sd","se","sg","sh","si","sk","sl","sm","sn","so","sr","ss","st","sv","sx","sy","sz","tc","td","tf","tg","th","tj","tk","tl","tm","tn","to","tr","tt","tv","tw","tz","ua","ug","uk","us","uy","uz","va","vc","ve","vg","vi","vn","vu","wf","ws","ye","yt","za","zm","zw"};
@@ -236,35 +295,32 @@ public class DGADetector {
             String[] tempbuf;
             String cDate;
 
+            Log.d(TAG,"Entered Function getCreationDate");
             WhoisClient whoisClient = new WhoisClient();
             int index;
             try {
                 whoisClient.connect("whois.iana.org", WhoisClient.DEFAULT_PORT);
-                String result = whoisClient.query(domain.toString());
+                String result = whoisClient.query(domain);
                 while(true){
                     index = result.indexOf("refer:");
                     if (index!=-1) {
                         String[] refer = result.substring(index).split("\\n");
                         String[] finalR = refer[0].split(" ");
                         next_hop = finalR[finalR.length-1];
-                        Log.d(TAG, next_hop);
+                        Log.d(TAG, "Next WHOIS server to query "+next_hop);
                         whoisClient.connect(next_hop,WhoisClient.DEFAULT_PORT);
                         result = whoisClient.query(domain);
-
                     }
                     else{
                         break;
                     }
                 }
-                //Log.d("Domain",result);
                 index = result.indexOf("Creation Date:");
                 if (index==-1){
                     index = result.indexOf("created:");
                 }
                 if(index!=-1){
                     tempbuf = result.substring(index).split("\\n");
-                    //tempbuf = tempbuf[0].split(" |\t");
-                    //cDate = tempbuf[tempbuf.length-1];
                     Pattern pattern = Pattern.compile("(19|20)\\d{2}");
                     Matcher matcher = pattern.matcher(tempbuf[0]);
                     String cYear = "";
@@ -276,6 +332,8 @@ public class DGADetector {
                     return 0;
                 }
             } catch (Exception e) {
+                Log.d(TAG,"Exception occurred in getCreationDate");
+                Log.d(TAG, e.getCause() +" "+e.getMessage());
                 e.printStackTrace();
                 return -1;
             }
@@ -285,9 +343,12 @@ public class DGADetector {
         }
         @Override
         protected Integer doInBackground(String... params) {
-            Log.i(TAG, "doInBackground");
+            Log.i(TAG, "DomDetector - doInBackground");
+            String domain;
             StringBuilder sbDomain = new StringBuilder();
-            int domainYear;
+            String res_Domain;
+            String next_server;
+            int domainYear, currentYear;
 
             String[] d = params[0].split("\\.");
             if(d.length>2){
@@ -320,8 +381,7 @@ public class DGADetector {
                 sbDomain.append(d[1]);
             }
             Log.d(TAG,sbDomain.toString());
-            /*String TLD;
-            ccTLDs*/
+
             domainYear = GetCreationDate(sbDomain.toString());
             Log.d(TAG,Integer.toString(domainYear));
             return domainYear;
@@ -330,6 +390,92 @@ public class DGADetector {
         @Override
         protected void onPostExecute(Integer result) {
             Log.i(TAG, "onPostExecute "+result.toString());
+        }
+    }
+
+    private class asyncAPI extends AsyncTask<String,Void ,Integer>{
+        String TAG="asyncAPI";
+
+        @Override
+        protected Integer doInBackground(String... params) {
+            Log.d(TAG, "DomDetector (asyncAPI) - doInBackground");
+            Log.d(TAG,params[0]);
+            String domain = getDom(params[0]);
+
+            String addr = "https://api.apility.net/baddomain/"+domain;
+            String input;
+
+            try {
+                URL dstURL = new URL(addr);
+                trustAllHosts();
+                HttpsURLConnection https = (HttpsURLConnection) dstURL.openConnection();
+                https.setHostnameVerifier(DO_NOT_VERIFY);
+                //http = https;
+
+                https.setRequestMethod("GET");
+                https.setRequestProperty("X-Auth-Token", "aae0d598-e46a-49e7-aab1-05195d8cddd3");
+                https.setRequestProperty("Accept","application/json");
+
+                BufferedReader br = new BufferedReader(
+                        new InputStreamReader(https.getInputStream()));
+
+                input = br.readLine();
+                JSONObject mainObject = new JSONObject(input);
+                JSONObject respObj = mainObject.getJSONObject("response");
+                JSONObject domObj = respObj.getJSONObject("domain");
+                int dScore = Integer.parseInt(domObj.getString("score"));
+                if(dScore == -1){
+                    dScore = 50;
+                }
+                return dScore;
+            }catch (Exception e){
+                Log.d(TAG,"Exception occurred in asyncAPI - Background");
+                Log.d(TAG, e.getCause() +" "+e.getMessage());
+                e.printStackTrace();
+            }
+
+            return 0;
+        }
+
+        @Override
+        protected void onPostExecute(Integer result) {
+            Log.i(TAG, "onPostExecute "+result.toString());
+        }
+        // always verify the host - dont check for certificate
+        final HostnameVerifier DO_NOT_VERIFY = new HostnameVerifier() {
+            public boolean verify(String hostname, SSLSession session) {
+                return true;
+            }
+        };
+
+        /**
+         * Trust every server - dont check for any certificate
+         */
+        private void trustAllHosts() {
+            // Create a trust manager that does not validate certificate chains
+            TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                    return new java.security.cert.X509Certificate[] {};
+                }
+
+                public void checkClientTrusted(X509Certificate[] chain,
+                                               String authType) throws CertificateException {
+                }
+
+                public void checkServerTrusted(X509Certificate[] chain,
+                                               String authType) throws CertificateException {
+                }
+            } };
+
+            // Install the all-trusting trust manager
+            try {
+                SSLContext sc = SSLContext.getInstance("TLS");
+                sc.init(null, trustAllCerts, new java.security.SecureRandom());
+                HttpsURLConnection
+                        .setDefaultSSLSocketFactory(sc.getSocketFactory());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
     class Result {

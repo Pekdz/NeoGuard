@@ -177,6 +177,7 @@ public class MyVpnService extends VpnService implements Runnable {
         try {
             b.addDisallowedApplication("com.android.vending");
             b.addDisallowedApplication("com.android.providers.downloads.ui");
+            b.addDisallowedApplication("ca.uwaterloo.crysp.privacyguard");
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }

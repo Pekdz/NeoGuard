@@ -43,7 +43,7 @@ public class DomainDetectionPlugin implements IPlugin {
                         Logger.i(TAG, "DGA Result => isDGA: " + result.isDGA + ", score: " + result.score);
                     }
 
-                    if (result.isDGA || result.score <= analyser.getScoreThresh()) {
+                    if (result.isDGA || result.score > analyser.getScoreThresh()) {
                         // check packet record isn't saved to database
                         if (metaData.currentPacket.dbId == -1) {
                             metaData.currentPacket = db.addPacketRecord(httpReq);

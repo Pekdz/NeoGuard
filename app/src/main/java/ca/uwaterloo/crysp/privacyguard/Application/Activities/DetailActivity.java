@@ -6,11 +6,13 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import ca.uwaterloo.crysp.privacyguard.Application.Database.CryptominerAlert;
 import ca.uwaterloo.crysp.privacyguard.Application.Database.DataLeak;
 import ca.uwaterloo.crysp.privacyguard.Application.Database.DatabaseHandler;
 import ca.uwaterloo.crysp.privacyguard.Application.PrivacyGuard;
@@ -72,6 +74,18 @@ public class DetailActivity extends AppCompatActivity {
         });
 
         list = (ListView) findViewById(R.id.detail_list);
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                DataLeak leak = (DataLeak) parent.getItemAtPosition(position);
+                Intent intent;
+                intent = new Intent(DetailActivity.this, PacketDetailActivity.class);
+                if (leak.getRefPacketId() != -1) {
+                    intent.putExtra(PrivacyGuard.EXTRA_REF_PACKETID, leak.getRefPacketId());
+                    startActivity(intent);
+                }
+            }
+        });
     }
 
     @Override

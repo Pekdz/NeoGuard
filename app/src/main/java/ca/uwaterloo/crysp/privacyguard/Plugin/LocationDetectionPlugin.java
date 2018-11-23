@@ -23,8 +23,8 @@ import java.util.Map;
 /**
  * Created by frank on 2014-06-23.
  */
-public class LocationDetection implements IPlugin {
-    private final static String TAG = LocationDetection.class.getSimpleName();
+public class LocationDetectionPlugin implements IPlugin {
+    private final static String TAG = LocationDetectionPlugin.class.getSimpleName();
     private final static boolean DEBUG = false;
     private static long MIN_TIME_INTERVAL_PASSIVE = 60000; //one minute
     private static float MIN_DISTANCE_INTERVAL = 10; // 10 meters

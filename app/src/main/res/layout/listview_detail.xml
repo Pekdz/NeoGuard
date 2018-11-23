@@ -23,22 +23,6 @@
         android:layout_marginEnd="4dp"
         android:background="@color/material_blue_grey_800" />
 
-
-    <TextView
-        android:layout_width="128dp"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceListItem"
-        android:text="Time Stamp"
-        android:textAlignment="center"
-        android:id="@+id/detail_time" />
-
-    <View
-        android:layout_width="1dp"
-        android:layout_height="fill_parent"
-        android:layout_marginStart="4dp"
-        android:layout_marginEnd="4dp"
-        android:background="@color/material_blue_grey_800" />
-
     <TextView
         android:layout_width="0dp"
         android:layout_weight="1"
@@ -48,6 +32,21 @@
         android:textAlignment="center"
         android:id="@+id/detail_destination"
         android:gravity="center_horizontal" />
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="fill_parent"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:background="@color/material_blue_grey_800" />
+
+    <TextView
+        android:layout_width="128dp"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceListItem"
+        android:text="Time"
+        android:textAlignment="center"
+        android:id="@+id/detail_time" />
 
 
 </LinearLayout>

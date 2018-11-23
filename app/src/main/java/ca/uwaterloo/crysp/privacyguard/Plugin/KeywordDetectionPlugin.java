@@ -16,11 +16,11 @@ import java.util.Set;
 /**
  * @author Eric Woojung Kim [w3kim@uwaterloo.ca]
  */
-public class KeywordDetection implements IPlugin {
+public class KeywordDetectionPlugin implements IPlugin {
 
     public static final String KEYWORDS_FILE_NAME = "keywords.txt";
 
-    private static final String TAG = KeywordDetection.class.getSimpleName();
+    private static final String TAG = KeywordDetectionPlugin.class.getSimpleName();
     private static final boolean DEBUG = false;
 
     private static final Set<String> keywords = new HashSet<>();

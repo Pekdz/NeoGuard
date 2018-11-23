@@ -47,8 +47,9 @@ public class FilterThread extends Thread {
         }
         // for each outgoing packet
         if(metaData.outgoing) {
-            metaData.currentPacket = null; // reset for different plugin referenced packet
-            Logger.logTraffic(metaData, payloadStr);
+            // reset for different plugin referenced packet
+            metaData.currentPacket = null;
+
             // inspect by each plugin
             for (IPlugin plugin : vpnService.getNewPlugins()) {
                 LeakReport leak = plugin.handleRequest(payloadStr, payload, metaData);

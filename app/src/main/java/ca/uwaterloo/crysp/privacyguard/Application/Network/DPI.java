@@ -68,11 +68,11 @@ public class DPI {
             Framedata frame = wsHelper.translateSingleFrame(ByteBuffer.wrap(rawRequest));
             return StandardCharsets.UTF_8.decode(frame.getPayloadData()).toString();
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.d(TAG, "Not supported websocket packet format.");
         } catch (IncompleteException e) {
-            Log.e("DPI", "Websocket packet is incomplete.");
+            Log.w(TAG, "Websocket packet is incomplete.");
         }
-        return "";
+        return null;
     }
 
     private void printHexData(byte[] data, String name) {

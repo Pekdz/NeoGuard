@@ -1,10 +1,7 @@
 package ca.uwaterloo.crysp.privacyguard.Application.Activities;
 
 import android.content.DialogInterface;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.os.Environment;
 import android.preference.PreferenceFragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -13,16 +10,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
+import ca.uwaterloo.crysp.privacyguard.Plugin.KeywordDetectionPlugin;
 import ca.uwaterloo.crysp.privacyguard.R;
 import ca.uwaterloo.crysp.privacyguard.Application.Logger;
-import ca.uwaterloo.crysp.privacyguard.Application.Database.DatabaseHandler;
-import ca.uwaterloo.crysp.privacyguard.Plugin.KeywordDetection;
 import ca.uwaterloo.crysp.privacyguard.Utilities.FileChooser;
 import ca.uwaterloo.crysp.privacyguard.Utilities.FileUtils;
-import com.opencsv.CSVWriter;
 
 import java.io.File;
-import java.io.FileWriter;
 
 /**
  * Created by lucas on 05/02/17.
@@ -88,7 +82,7 @@ public class MyPreferencesActivity extends AppCompatActivity {
             public void fileSelected(final File file) {
                 // this is the path where the chosen file gets copied to
                 String path = String.format("%s/%s",
-                        getFilesDir().getAbsolutePath(), KeywordDetection.KEYWORDS_FILE_NAME);
+                        getFilesDir().getAbsolutePath(), KeywordDetectionPlugin.KEYWORDS_FILE_NAME);
 
                 // check if there is an existing file
                 File keywords = new File(path);
@@ -99,7 +93,7 @@ public class MyPreferencesActivity extends AppCompatActivity {
                 // copy the file to the path
                 FileUtils.copyFile(file, keywords.getAbsolutePath());
                 // notify the plugin the file has been updated
-                KeywordDetection.invalidate();
+                KeywordDetectionPlugin.invalidate();
                 Logger.d(TAG, "keywords have been updated");
             }
         }).showDialog();

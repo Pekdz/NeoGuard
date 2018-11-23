@@ -19,11 +19,11 @@ import java.util.HashMap;
 /**
  * Created by frank on 23/07/14.
  */
-public class DeviceDetection implements IPlugin {
+public class DeviceDetectionPlugin implements IPlugin {
     private static HashMap<String, String> nameofValue = new HashMap<String, String>();
     private static boolean init = false;
     private final boolean DEBUG = false;
-    private final String TAG = DeviceDetection.class.getSimpleName();
+    private final String TAG = DeviceDetectionPlugin.class.getSimpleName();
 
     @Override
     @Nullable

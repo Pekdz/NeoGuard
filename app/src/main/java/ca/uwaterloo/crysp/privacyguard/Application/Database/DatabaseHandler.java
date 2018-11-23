@@ -171,6 +171,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             + KEY_TYPE + " TEXT,"
             + KEY_CONTENT + " TEXT,"
             + KEY_TIME_STAMP + " TEXT,"
+            + KEY_REFPACKET_ID + " INTEGER,"
             + KEY_FOREGROUND_STATUS + " INTEGER,"
             + KEY_HOSTNAME + " TEXT)";
     private static final String CREATE_LEAK_SUMMARY_TABLE = "CREATE TABLE " + TABLE_LEAK_SUMMARY + "("
@@ -380,7 +381,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     // Adding new data leak
-    private void addDataLeak(String packageName, String appName, String category, String type, String content, String hostName) {
+    private void addDataLeak(String packageName, String appName, String category, String type, String content, String hostName, long refPacketId) {
         ContentValues values = new ContentValues();
         values.put(KEY_PACKAGE, packageName); // App Name
         values.put(KEY_NAME, appName); // App Name
@@ -390,6 +391,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(KEY_TIME_STAMP, DATE_FORMAT.format(new Date())); // Leak time stamp
         values.put(KEY_FOREGROUND_STATUS, UNSPECIFIED_STATUS); // Leak foreground status
         values.put(KEY_HOSTNAME, hostName);
+        values.put(KEY_REFPACKET_ID, refPacketId);
 
         // Inserting Row
         final long id = mDB.insert(TABLE_DATA_LEAKS, null, values);
@@ -526,10 +528,12 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     public DataLeak getLeakById(long id) {
-        Cursor cursor = mDB.query(TABLE_DATA_LEAKS, new String[]{KEY_PACKAGE, KEY_NAME, KEY_CATEGORY, KEY_TYPE, KEY_CONTENT, KEY_TIME_STAMP, KEY_FOREGROUND_STATUS, KEY_HOSTNAME}, KEY_ID + "=?", new String[]{String.valueOf(id)}, null, null, null);
+        Cursor cursor = mDB.query(TABLE_DATA_LEAKS, new String[]{KEY_PACKAGE, KEY_NAME, KEY_CATEGORY, KEY_TYPE, KEY_CONTENT,
+                        KEY_TIME_STAMP, KEY_FOREGROUND_STATUS, KEY_HOSTNAME, KEY_REFPACKET_ID},
+                KEY_ID + "=?", new String[]{String.valueOf(id)}, null, null, null);
         if (cursor != null) {
             if (cursor.moveToFirst()) {
-                DataLeak leak = new DataLeak(cursor.getString(0), cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getString(4), cursor.getString(5), cursor.getInt(6), cursor.getString(7));
+                DataLeak leak = new DataLeak(cursor.getString(0), cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getString(4), cursor.getString(5), cursor.getInt(6), cursor.getString(7), cursor.getLong(8));
                 cursor.close();
                 return leak;
             }
@@ -541,11 +545,13 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     public List<DataLeak> getAppLeaks(String packageName, String category) {
         List<DataLeak> leakList = new ArrayList<>();
-        Cursor cursor = mDB.query(TABLE_DATA_LEAKS, new String[]{KEY_PACKAGE, KEY_NAME, KEY_TYPE, KEY_CONTENT, KEY_TIME_STAMP, KEY_FOREGROUND_STATUS, KEY_HOSTNAME}, KEY_PACKAGE + "=? AND " + KEY_CATEGORY + "=?", new String[]{packageName, category}, null, null, null);
+        Cursor cursor = mDB.query(TABLE_DATA_LEAKS, new String[]{KEY_PACKAGE, KEY_NAME, KEY_TYPE, KEY_CONTENT,
+                KEY_TIME_STAMP, KEY_FOREGROUND_STATUS, KEY_HOSTNAME, KEY_REFPACKET_ID},
+                KEY_PACKAGE + "=? AND " + KEY_CATEGORY + "=?", new String[]{packageName, category}, null, null, null);
         if (cursor != null) {
             if (cursor.moveToFirst()) {
                 do {
-                    DataLeak leak = new DataLeak(cursor.getString(0), cursor.getString(1), category, cursor.getString(2), cursor.getString(3), cursor.getString(4), cursor.getInt(5), cursor.getString(6));
+                    DataLeak leak = new DataLeak(cursor.getString(0), cursor.getString(1), category, cursor.getString(2), cursor.getString(3), cursor.getString(4), cursor.getInt(5), cursor.getString(6), cursor.getLong(7));
                     leakList.add(leak);
                 } while (cursor.moveToNext());
             }
@@ -557,11 +563,13 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     public List<DataLeak> getAppLeaks(String category) {
         List<DataLeak> leakList = new ArrayList<>();
-        Cursor cursor = mDB.query(TABLE_DATA_LEAKS, new String[]{KEY_PACKAGE, KEY_NAME, KEY_TYPE, KEY_CONTENT, KEY_TIME_STAMP, KEY_FOREGROUND_STATUS, KEY_HOSTNAME}, KEY_CATEGORY + "=?", new String[]{category}, null, null, null);
+        Cursor cursor = mDB.query(TABLE_DATA_LEAKS, new String[]{KEY_PACKAGE, KEY_NAME, KEY_TYPE, KEY_CONTENT,
+                KEY_TIME_STAMP, KEY_FOREGROUND_STATUS, KEY_HOSTNAME, KEY_REFPACKET_ID},
+                KEY_CATEGORY + "=?", new String[]{category}, null, null, null);
         if (cursor != null) {
             if (cursor.moveToFirst()) {
                 do {
-                    DataLeak leak = new DataLeak(cursor.getString(0), cursor.getString(1), category, cursor.getString(2), cursor.getString(3), cursor.getString(4), cursor.getInt(5), cursor.getString(6));
+                    DataLeak leak = new DataLeak(cursor.getString(0), cursor.getString(1), category, cursor.getString(2), cursor.getString(3), cursor.getString(4), cursor.getInt(5), cursor.getString(6), cursor.getLong(7));
                     leakList.add(leak);
                 } while (cursor.moveToNext());
             }
@@ -659,7 +667,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 }
             } else {
                 for (LeakInstance li : rpt.leaks) {
-                    addDataLeak(rpt.metaData.packageName, rpt.metaData.appName, rpt.category.name(), li.type, li.content, rpt.metaData.destHostName);
+                    addDataLeak(rpt.metaData.packageName, rpt.metaData.appName, rpt.category.name(), li.type, li.content, rpt.metaData.destHostName, li.refPacketId);
                 }
             }
 

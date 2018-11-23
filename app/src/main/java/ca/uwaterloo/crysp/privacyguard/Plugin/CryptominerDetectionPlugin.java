@@ -14,49 +14,46 @@ import java.util.List;
 import java.util.Set;
 
 import ca.uwaterloo.crysp.privacyguard.Application.Database.DatabaseHandler;
-import ca.uwaterloo.crysp.privacyguard.Application.Database.PacketRecord;
 import ca.uwaterloo.crysp.privacyguard.Application.Logger;
 import ca.uwaterloo.crysp.privacyguard.Application.Network.ConnectionMetaData;
-import ca.uwaterloo.crysp.privacyguard.Application.Network.DPI;
 import ca.uwaterloo.crysp.privacyguard.Application.Network.L7Protocol;
 
 
-public class CryptominerDetection implements IPlugin {
+public class CryptominerDetectionPlugin implements IPlugin {
     private final boolean DEBUG = true;
-    private final String TAG = CryptominerDetection.class.getSimpleName();
+    private final String TAG = CryptominerDetectionPlugin.class.getSimpleName();
     private DatabaseHandler db;
-    private DPI dpi;
     private HelperTool tool;
 
     @Override
     @Nullable
     public LeakReport handleRequest(String request, byte[] rawRequest, ConnectionMetaData metaData) {
         try {
-            if (metaData.protocol == L7Protocol.WEBSOCKET && metaData.outgoing) {
+            if (metaData.protocol == L7Protocol.WEBSOCKET) {
                 ArrayList<LeakInstance> leaks = new ArrayList<>();
-                String wsPayload = dpi.getWebsocketPayload(rawRequest);
-                if (DEBUG) {
-                    Logger.i(TAG, metaData.appName + " ===== WebSocket ======="
-                            + "\nDomain => " + metaData.destHostName
-                            + "\nPayload => " + wsPayload
-                            + "\n ===========");
-                }
 
-                // check for cyptominer
-                boolean domainIsMiningPool = tool.isMiningPool(metaData.destHostName);
-                String signatureName = tool.getSignature(wsPayload);
+                if (metaData.currentPacket != null) {
+                    String wsPayload = metaData.currentPacket.payload;
 
-                if (domainIsMiningPool || !signatureName.equals("N/A")) {
-                    // check packet record isn't saved to database
-                    if (metaData.currentPacket == null) {
-                        metaData.currentPacket = db.addPacketRecord(new PacketRecord(metaData.destHostName,
-                                metaData.destIP, metaData.destPort, "Websocket",
-                                null, null, null, wsPayload));
+                    // check for cyptominer
+                    boolean domainIsMiningPool = tool.isMiningPool(metaData.destHostName);
+                    String signatureName = tool.getSignature(wsPayload);
+
+                    if (DEBUG) {
+                        Logger.i(TAG, "Cryptominer Result => isPool: " + domainIsMiningPool
+                                + ", signature: " + signatureName);
                     }
 
-                    LeakInstance leak = new CryptominerInstance("Cyptominer detected", metaData.destHostName,
-                            metaData.currentPacket.dbId, domainIsMiningPool, signatureName, metaData.currentPacket.time);
-                    leaks.add(leak);
+                    if (domainIsMiningPool || !signatureName.equals("N/A")) {
+                        // check packet record isn't saved to database
+                        if (metaData.currentPacket.dbId == -1) {
+                            metaData.currentPacket = db.addPacketRecord(metaData.currentPacket);
+                        }
+
+                        LeakInstance leak = new CryptominerInstance("Cyptominer detected", metaData.destHostName,
+                                metaData.currentPacket.dbId, domainIsMiningPool, signatureName, metaData.currentPacket.time);
+                        leaks.add(leak);
+                    }
                 }
 
                 if (leaks.isEmpty())
@@ -92,7 +89,6 @@ public class CryptominerDetection implements IPlugin {
     @Override
     public void setContext(Context context) {
         db = DatabaseHandler.getInstance(context);
-        dpi = DPI.getInstance();
         tool = HelperTool.getInstance();
     }
 
@@ -126,20 +122,40 @@ public class CryptominerDetection implements IPlugin {
             return signature;
         }
 
+        //check json object schema
+        private boolean checkJsonSchema(JSONObject obj) throws JSONException {
+            Iterator<String> keys = obj.keys();
+            List<String> keysList = new ArrayList<>();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                keysList.add(key);
+            }
+            if (keysList.size() == 2
+                    && keysList.contains("type")
+                    && keysList.contains("params")) {
+                JSONObject sub_obj = obj.getJSONObject("params");
+                Iterator<String> sub_keys = sub_obj.keys();
+                List<String> sub_keysList = new ArrayList<>();
+                while (sub_keys.hasNext()) {
+                    String sub_key = sub_keys.next();
+                    sub_keysList.add(sub_key);
+                }
+                if (sub_keysList.size() == 5) {
+                    return sub_keysList.contains("version")
+                            && sub_keysList.contains("site_key")
+                            && sub_keysList.contains("type")
+                            && sub_keysList.contains("user")
+                            && sub_keysList.contains("goal");
+                }
+            }
+            return false;
+        }
+
         //check coinhive websocket payload pattern
         private boolean checkCoinHive(String payload) {
-            boolean hasBlob = false;
-            boolean hasTarget = false;
             try {
                 JSONObject ws_obj = new JSONObject(payload);
-                Iterator<String> keys = ws_obj.keys();
-                while (keys.hasNext()) {
-                    String key = keys.next();
-                    if (!hasBlob) hasBlob = key.equals("blob");
-                    if (!hasTarget) hasTarget = key.equals("target");
-                    if (hasBlob && hasTarget) return true;
-                }
-                return false;
+                return checkJsonSchema(ws_obj);
             } catch (JSONException e) {
                 // e.printStackTrace();
                 return false;

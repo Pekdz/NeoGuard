@@ -110,7 +110,7 @@ public class DGADetector {
         return nGram;
     }
 
-    private int[][] getAlphaBetCouplesMatrix(List<String> trainingLinesList) {
+/*    private int[][] getAlphaBetCouplesMatrix(List<String> trainingLinesList) {
         int[][] counts = createArray(alphabet.length());
         for (String line : trainingLinesList) {
             List<String> nGram = getNGram(2, line);
@@ -139,7 +139,7 @@ public class DGADetector {
             result.add(getAvgTransitionProbability(line, logProbabilityMatrix));
         }
         return result;
-    }
+    }*/
 
     private double getAvgTransitionProbability(String line, double[][] logProbabilityMatrix) {
         double logProb = 0d;
@@ -152,7 +152,7 @@ public class DGADetector {
         return Math.exp(logProb / Math.max(transitionCount, 1));
     }
 
-    private int[][] createArray(int length) {
+    /*private int[][] createArray(int length) {
         int[][] counts = new int[length][length];
         for (int i = 0; i < counts.length; i++) {
             Arrays.fill(counts[i], MIN_COUNT_VAL);
@@ -166,7 +166,7 @@ public class DGADetector {
             sum += array[i];
         }
         return sum;
-    }
+    }*/
 
     /**
      * determines if a sentence is gibberish or not.
@@ -201,19 +201,23 @@ public class DGADetector {
 
     public Result getResult(String domain) {
         String TAG = "getScore";
-        int domain_score = 30;
+        int domain_score;
         int cYear = Calendar.getInstance().get(Calendar.YEAR);
         int dYear = cYear;
         Result ret = new Result();
         ret.score = 0;
         ret.isDGA = false;
+        String sDomain = getDom(domain);
 
-        if (isDGA(domain)) {
-            domain_score = 30;
+        // TODO: check for cache if found return cache
+
+
+        if (isDGA(sDomain)) {
+            domain_score = 75;
             AsyncWHOIS task = new AsyncWHOIS();
 
             try {
-                dYear = task.execute(domain).get();
+                dYear = task.execute(sDomain).get();
                 if (dYear == 0) {
                     dYear = cYear;
                 }
@@ -223,27 +227,28 @@ public class DGADetector {
             }
             //WHOIS date range 0 - 1 year "0", 1-3 years "-10", 3-5 years "-20", >5 years "-30"
             if (((cYear - dYear) > 1) && ((cYear - dYear) <= 3)) {
-                domain_score -= 10;
-            } else if (((cYear - dYear) > 3) && ((cYear - dYear) <= 5)) {
                 domain_score -= 20;
+            } else if (((cYear - dYear) > 3) && ((cYear - dYear) <= 5)) {
+                domain_score -= 50;
             } else if ((cYear - dYear) > 5) {
-                domain_score -= 25;
+                domain_score -= 70;
             }
             ret.isDGA = true;
             ret.score += domain_score;
         }
 
-        //query if its bad domain, if yes +50
+        //query if its bad domain, if yes +100
+        //Sensitive NameServer if matches dynDNS, +15
+        //ASN if needed, if detect adobe and ASN does not correspond to adobe +30
         asyncAPI query = new asyncAPI();
         try {
-            int res = query.execute(domain).get();
+            int res = query.execute(sDomain).get();
             ret.score += res;
         } catch (Exception e) {
             e.printStackTrace();
         }
-        //Sensitive NameServer if matches dynDNS, +15
 
-        //ASN if needed, if detect adobe and ASN does not correspond to adobe +30
+
 
         return ret;
     }
@@ -400,7 +405,7 @@ public class DGADetector {
         protected Integer doInBackground(String... params) {
             Log.d(TAG, "DomDetector (asyncAPI) - doInBackground");
             Log.d(TAG, params[0]);
-            String domain = getDom(params[0]);
+            String domain = params[0];
 
             String addr = "https://api.apility.net/baddomain/" + domain;
             String input;
@@ -425,8 +430,10 @@ public class DGADetector {
                 JSONObject domObj = respObj.getJSONObject("domain");
                 int dScore = Integer.parseInt(domObj.getString("score"));
                 if (dScore == -1) {
-                    dScore = 50;
+                    dScore = 100;
                 }
+                domObj.getJSONArray("ns");
+
                 return dScore;
             } catch (Exception e) {
                 Log.d(TAG, "Exception occurred in asyncAPI - Background(Might be API server refuse connection");

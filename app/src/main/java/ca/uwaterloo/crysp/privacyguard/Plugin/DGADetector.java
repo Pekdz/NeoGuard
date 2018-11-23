@@ -292,15 +292,11 @@ public class DGADetector {
 
     private class AsyncWHOIS extends AsyncTask<String, Void, Integer> {
         String TAG = "AsyncWHOIS";
-        String[] ccTLDs = {"ac", "ad", "ae", "af", "ag", "ai", "al", "am", "ao", "aq", "ar", "as", "at", "au", "aw", "ax", "az", "ba", "bb", "bd", "be", "bf", "bg", "bh", "bi", "bj", "bm", "bn", "bo", "br", "bs", "bt", "bw", "by", "bz", "ca", "cc", "cd", "cf", "cg", "ch", "ci", "ck", "cl", "cm", "cn", "co", "cr", "cu", "cv", "cw", "cx", "cy", "cz", "de", "dj", "dk", "dm", "do", "dz", "ec", "ee", "eg", "er", "es", "et", "eu", "fi", "fj", "fk", "fm", "fo", "fr", "ga", "gd", "ge", "gf", "gg", "gh", "gi", "gl", "gm", "gn", "gp", "gq", "gr", "gs", "gt", "gu", "gw", "gy", "hk", "hm", "hn", "hr", "ht", "hu", "id", "ie", "il", "im", "in", "io", "iq", "ir", "is", "it", "je", "jm", "jo", "jp", "ke", "kg", "kh", "ki", "km", "kn", "kp", "kr", "kw", "ky", "kz", "la", "lb", "lc", "li", "lk", "lr", "ls", "lt", "lu", "lv", "ly", "ma", "mc", "md", "me", "mg", "mh", "mk", "ml", "mm", "mn", "mo", "mp", "mq", "mr", "ms", "mt", "mu", "mv", "mw", "mx", "my", "mz", "na", "nc", "ne", "nf", "ng", "ni", "nl", "no", "np", "nr", "nu", "nz", "om", "pa", "pe", "pf", "pg", "ph", "pk", "pl", "pm", "pn", "pr", "ps", "pt", "pw", "py", "qa", "re", "ro", "rs", "ru", "rw", "sa", "sb", "sc", "sd", "se", "sg", "sh", "si", "sk", "sl", "sm", "sn", "so", "sr", "ss", "st", "sv", "sx", "sy", "sz", "tc", "td", "tf", "tg", "th", "tj", "tk", "tl", "tm", "tn", "to", "tr", "tt", "tv", "tw", "tz", "ua", "ug", "uk", "us", "uy", "uz", "va", "vc", "ve", "vg", "vi", "vn", "vu", "wf", "ws", "ye", "yt", "za", "zm", "zw"};
-        String[] TLDs = {"com", "net", "org", "info", "biz", "io", "edu", "gov"};
-
 
         private int GetCreationDate(String domain) {
             String TAG = "getCreationDate";
             String next_hop;
             String[] tempbuf;
-            String cDate;
 
             Log.d(TAG, "Entered Function getCreationDate");
             WhoisClient whoisClient = new WhoisClient();
@@ -352,42 +348,12 @@ public class DGADetector {
         @Override
         protected Integer doInBackground(String... params) {
             Log.i(TAG, "DomDetector - doInBackground");
-            String domain;
-            StringBuilder sbDomain = new StringBuilder();
-            String res_Domain;
-            String next_server;
-            int domainYear, currentYear;
+            int domainYear;
 
-            String[] d = params[0].split("\\.");
-            if (d.length > 2) {
-                List<String> clist = Arrays.asList(ccTLDs);
-                List<String> tlist = Arrays.asList(TLDs);
-                if ((clist.contains(d[d.length - 1])) && ((tlist.contains(d[d.length - 2])))) {
-                    // last entry is ccTLD && 2nd last is a valid TLD
-                    sbDomain.append(d[d.length - 3]);
-                    sbDomain.append(".");
-                    sbDomain.append(d[d.length - 2]);
-                    sbDomain.append(".");
-                    sbDomain.append(d[d.length - 1]);
-                    // last entry is ccTLD && 2nd last is not a valid TLD
-                } else if ((clist.contains(d[d.length - 1])) && (!(tlist.contains(d[d.length - 2])))) {
-                    sbDomain.append(d[d.length - 2]);
-                    sbDomain.append(".");
-                    sbDomain.append(d[d.length - 1]);
-                } else {
-                    // last entry is not ccTLD
-                    sbDomain.append(d[d.length - 2]);
-                    sbDomain.append(".");
-                    sbDomain.append(d[d.length - 1]);
-                }
-            } else {
-                sbDomain.append(d[0]);
-                sbDomain.append(".");
-                sbDomain.append(d[1]);
-            }
-            Log.d(TAG, sbDomain.toString());
+            //String[] d = params[0].split("\\.");
+            Log.d(TAG, params[0]);
 
-            domainYear = GetCreationDate(sbDomain.toString());
+            domainYear = GetCreationDate(params[0]);
             Log.d(TAG, Integer.toString(domainYear));
             return domainYear;
         }

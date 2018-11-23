@@ -107,6 +107,15 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name="ca.uwaterloo.crysp.privacyguard.Plugin.SMSDetection"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter android:priority="1000">
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
+
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").

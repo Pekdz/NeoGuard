@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.telephony.SmsMessage;
+import android.util.Log;
 
 
 import java.util.ArrayList;
@@ -94,6 +95,7 @@ public class SMSDetection extends BroadcastReceiver implements IPlugin {
                         String code = generateCode(msgData);
                         if (code != "") {
                             smsList.add(code);
+                            Log.i("has_code", code);
                         }
                     }
                 } while (sms.moveToNext());

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">PrivacyGuard</string>
+    <string name="app_name">NeoGuard</string>
 
     <!-- Main Activity -->
     <string name="connect">Enable PrivacyGuard</string>

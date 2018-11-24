@@ -393,8 +393,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(KEY_DOMAIN_CACHE_KEY, domain);
         values.put(KEY_DOMAIN_CACHE_SCORE, result.score);
         int isdga = result.isDGA ? 1 : 0;
-        values.put(KEY_DOMAIN_CACHE_SCORE, isdga);
-        mDB.insert(TABLE_PACKET, null, values);
+        values.put(KEY_DOMAIN_CACHE_ISGDA, isdga);
+        mDB.insert(TABLE_DOMAIN_CACHE, null, values);
     }
 
     public HashMap<String, DGADetector.Result> getDomainCache() {

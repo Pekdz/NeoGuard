@@ -216,16 +216,17 @@ public class DGADetector {
         int domain_score;
         int cYear = Calendar.getInstance().get(Calendar.YEAR);
         int dYear = cYear;
-        Result ret = new Result();
-        ret.score = 0;
-        ret.isDGA = false;
         String sDomain = getDom(domain);
 
         // check for cache if found return cache
-        ret = cache.get(sDomain);
+        Result ret = cache.get(sDomain);
         if (ret != null) {
             return ret;
         }
+
+        ret = new Result();
+        ret.score = 0;
+        ret.isDGA = false;
 
         if (isDGA(sDomain)) {
             domain_score = 75;
@@ -417,7 +418,7 @@ public class DGADetector {
             String TAG ="asyncAPI - Background";
             Log.d(TAG, "Looking up domain: " + params[0]);
             String domain = params[0].toLowerCase();
-
+            int dScore =0;
             String addr = "https://api.apility.net/baddomain/"+domain;
             String input;
             String[] googleASNs = {"36040", "45566", "41264", "36384", "22577", "36492", "15169"};
@@ -446,7 +447,7 @@ public class DGADetector {
                 JSONObject mainObject = new JSONObject(input);
                 JSONObject respObj = mainObject.getJSONObject("response");
                 JSONObject domObj = respObj.getJSONObject("domain");
-                int dScore = Integer.parseInt(domObj.getString("score"));
+                dScore = Integer.parseInt(domObj.getString("score"));
                 if (dScore == -1) {
                     dScore = 100;
                 }

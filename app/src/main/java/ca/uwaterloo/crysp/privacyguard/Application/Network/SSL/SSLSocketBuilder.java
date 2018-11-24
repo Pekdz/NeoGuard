@@ -1,6 +1,7 @@
 package ca.uwaterloo.crysp.privacyguard.Application.Network.SSL;
 
 import ca.uwaterloo.crysp.privacyguard.Application.Logger;
+import ca.uwaterloo.crysp.privacyguard.Application.Network.MITMProxy.MITMSSLSocketFactory;
 
 import org.sandrop.webscarab.plugin.proxy.SSLSocketFactoryFactory;
 import org.sandrop.webscarab.plugin.proxy.SiteData;

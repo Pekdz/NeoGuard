@@ -19,6 +19,7 @@
 
 package ca.uwaterloo.crysp.privacyguard.Application.Network.Forwarder;
 
+import ca.uwaterloo.crysp.privacyguard.Application.Database.DatabaseHandler;
 import ca.uwaterloo.crysp.privacyguard.Application.Logger;
 import ca.uwaterloo.crysp.privacyguard.Application.Network.ConnectionMetaData;
 import ca.uwaterloo.crysp.privacyguard.Application.Network.DPI;
@@ -98,8 +99,9 @@ public class LocalServerForwarder extends Thread {
             if (paramList != null) {
                 boolean flowIsBad = FlowAnalyzer.getInstance().isBadFlow(paramList);
                 Logger.i(TAG, flowStats.toString());
-                Logger.i(TAG, "Input params list => " + Arrays.toString(paramList.toArray()));
+                // Logger.i(TAG, "Input params list => " + Arrays.toString(paramList.toArray()));
                 Logger.i(TAG, "Flow is bad => " + flowIsBad);
+                DatabaseHandler.getInstance(vpnService).updateAiFlowCnt(packageName, flowIsBad);
             }
 
             clientSocket.close();

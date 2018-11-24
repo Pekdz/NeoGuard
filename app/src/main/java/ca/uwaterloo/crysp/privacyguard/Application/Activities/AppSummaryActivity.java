@@ -70,6 +70,10 @@ public class AppSummaryActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 CategorySummary category = (CategorySummary) parent.getItemAtPosition(position);
                 Intent intent;
+                if (category.category.equalsIgnoreCase("AI Flow Analysis")){
+                    return;
+                }
+
                 if(category.category.equalsIgnoreCase("location")){
                     intent = new Intent(AppSummaryActivity.this, LocationDetailActivity.class);
                 } else if (category.category.equalsIgnoreCase("domain")) {

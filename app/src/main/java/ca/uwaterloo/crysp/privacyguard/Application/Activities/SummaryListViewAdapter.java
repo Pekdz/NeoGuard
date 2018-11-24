@@ -67,14 +67,21 @@ public class SummaryListViewAdapter extends BaseAdapter {
 
         CategorySummary category = list.get(position);
         holder.category.setText(category.category);
-        holder.count.setText(String.valueOf(category.count));
-
-        holder.countString.setText(category.count == 1 ? R.string.alert_singular : R.string.alert_plural);
-
-        if (category.ignore == 0) {
+        if (category.category.equalsIgnoreCase("AI Flow Analysis")) {
+            String badGoodRatio = String.valueOf(category.ignore) + " / " + String.valueOf(category.count);
+            holder.count.setText(badGoodRatio);
+            holder.countString.setText(R.string.bad_good_label);
             holder.ignore.setVisibility(View.INVISIBLE);
-        } else {
-            holder.ignore.setVisibility(View.VISIBLE);
+        } else  {
+            holder.count.setText(String.valueOf(category.count));
+            holder.countString.setText(category.count == 1 ? R.string.alert_singular : R.string.alert_plural);
+
+            if (category.ignore == 0) {
+                holder.ignore.setVisibility(View.INVISIBLE);
+            } else {
+                holder.ignore.setVisibility(View.VISIBLE);
+            }
+
         }
 
         return convertView;

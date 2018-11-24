@@ -67,7 +67,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     public String[] getTables() {
         return new String[]{TABLE_DATA_LEAKS, TABLE_LEAK_SUMMARY, TABLE_APP_STATUS_EVENTS,
-                TABLE_TRAFFIC_SUMMARY, TABLE_CRYPTO_ALERT, TABLE_DOMAIN_ALERT, TABLE_PACKET};
+                TABLE_TRAFFIC_SUMMARY, TABLE_CRYPTO_ALERT, TABLE_DOMAIN_ALERT, TABLE_PACKET,
+                TABLE_DOMAIN_CACHE, TABLE_AI_FLOW};
     }
 
     public static SimpleDateFormat getDateFormat() {
@@ -87,6 +88,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.execSQL(CREATE_DOMAIN_TABLE);
         db.execSQL(CREATE_CRYPTO_TABLE);
         db.execSQL(CREATE_DOMAINSCORE_TABLE);
+        db.execSQL(CREATE_AI_FLOW);
     }
 
     // Upgrading database
@@ -102,6 +104,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_DOMAIN_ALERT);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_CRYPTO_ALERT);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_DOMAIN_CACHE);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_AI_FLOW);
         // Create tables again
         onCreate(db);
     }
@@ -136,6 +139,16 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             + KEY_TIME_STAMP + " INTEGER,"
             + KEY_FOREGROUND_STATUS + " INTEGER,"
             + KEY_HOSTNAME + " TEXT)";
+
+    // AI flow result data
+    private static final String TABLE_AI_FLOW = "flow_ai";
+    private static final String KEY_GOOD_FLOW = "good_flow";
+    private static final String KEY_BAD_FLOW = "bad_flow";
+    private static final String CREATE_AI_FLOW = "CREATE TABLE " + TABLE_AI_FLOW + "("
+            + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+            + KEY_PACKAGE + " TEXT,"
+            + KEY_GOOD_FLOW + " INTEGER,"
+            + KEY_BAD_FLOW + " INTEGER)";
 
     private static final String TAG = DatabaseHandler.class.getSimpleName();
 
@@ -567,6 +580,17 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             cursor.close();
         }
 
+        cursor = mDB.query(TABLE_AI_FLOW, new String[]{KEY_ID, KEY_GOOD_FLOW, KEY_BAD_FLOW},
+                KEY_PACKAGE + "=?", new String[]{packageName}, null, null, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                int goodCnt = cursor.getInt(0);
+                int badCnt = cursor.getInt(1);
+                categories.add(new CategorySummary(cursor.getInt(0), "AI Flow Analysis", goodCnt, badCnt));
+            }
+            cursor.close();
+        }
+
         return categories;
     }
 
@@ -734,6 +758,42 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             return ignore == 1 ? -1 : notifyId;
         }
         return -1;
+    }
+
+    public void updateAiFlowCnt(String packageName, boolean isBad) {
+        Cursor cursor = mDB.query(TABLE_AI_FLOW, new String[]{KEY_ID, KEY_GOOD_FLOW, KEY_BAD_FLOW},
+                KEY_PACKAGE + "=?", new String[]{packageName}, null, null, null, null);
+
+        int goodCnt = 0, badCnt = 0;
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                goodCnt = cursor.getInt(0);
+                badCnt = cursor.getInt(1);
+
+                ContentValues values = new ContentValues();
+
+                if (isBad) {
+                    values.put(KEY_BAD_FLOW, badCnt + 1);
+                } else
+                    values.put(KEY_GOOD_FLOW, goodCnt + 1);
+
+                String selection = KEY_PACKAGE + " =?";
+                String[] selectionArgs = {String.valueOf(packageName)};
+                mDB.update(TABLE_AI_FLOW, values, selection, selectionArgs);
+
+            } else {
+                ContentValues values = new ContentValues();
+                if (isBad)
+                    badCnt++;
+                else
+                    goodCnt++;
+                values.put(KEY_PACKAGE, packageName);
+                values.put(KEY_GOOD_FLOW, goodCnt);
+                values.put(KEY_BAD_FLOW, badCnt);
+                mDB.insert(TABLE_AI_FLOW, null, values);
+            }
+            cursor.close();
+        }
     }
 
 

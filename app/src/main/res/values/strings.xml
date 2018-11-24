@@ -18,6 +18,7 @@
     <string name="export_data_message">Are you sure you want to export data? This will export all database tables into CSV files (one CSV file for each table).</string>
     <string name="vpn_on">ON</string>
     <string name="vpn_off">OFF</string>
+    <string name="bad_good_label">bad/good</string>
     <string name="alert_singular">alert</string>
     <string name="alert_plural">alerts</string>
     <string name="leak_singular">leak</string>
@@ -73,6 +74,10 @@
     <string name="contact_category">Contact</string>
     <string name="device_category">Device</string>
     <string name="keyword_category">Keyword</string>
+    <string name="domain_category">Suspicious Domain</string>
+    <string name="sms_category">SMS Leak</string>
+    <string name="cypto_category">Crytominer Detection</string>
+    <string name="ai_category">AI Flow Analysis</string>
 
     <!-- Android Plot Display -->
     <string name="dialog_accept">OK</string>

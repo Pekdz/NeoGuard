@@ -18,6 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.net.whois.WhoisClient;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javax.net.ssl.HostnameVerifier;
@@ -40,7 +41,7 @@ public class DGADetector {
     private static final int MIN_COUNT_VAL = 10;
     private DatabaseHandler db;
     private final String alphabet = "abcdefghijklmnopqrstuvwxyz ";
-    private double[][] logProbabilityMatrix = {
+    private final double[][] logProbabilityMatrix = {
             {-8.569134847000806, -3.9369307938330933, -3.2206676967672974, -3.048245521037517, -6.052276597406203, -4.699558531819917, -3.994156130878688, -6.710404751666567, -3.245301640130125, -7.060737789080015, -4.512280893694204, -2.4997176870344004, -3.6426343157108727, -1.5707438146424084, -7.978466335723797, -3.893639344291984, -9.821897815496174, -2.3025259123500446, -2.348363959452305, -1.944862676264688, -4.539155660733608, -3.8718472941849895, -4.706356654533738, -6.560310872534923, -3.6497228572775398, -6.64195183699619, -2.7135048994495476},
             {-2.5528619980785, -5.139226208055755, -6.049719822245583, -6.219404795035026, -1.173596307609444, -8.563954087128105, -8.805116143944993, -8.494961215641153, -3.3328454702735173, -5.004532700251055, -8.805116143944993, -2.139085063222716, -6.121607051758899, -6.808562262070924, -2.1459387811703974, -8.312639658847198, -8.900426323749317, -2.719375008855968, -3.788438535392774, -4.703224376087508, -2.137350056136624, -6.320209494156992, -7.676650892127201, -8.900426323749317, -2.3611294272462486, -8.900426323749317, -4.738423113053401},
             {-2.089456234355858, -9.398278073111246, -3.846611313191934, -7.6784921035082805, -1.7391067054451883, -8.79214226954093, -9.580599629905201, -1.909331907702555, -2.93317069336499, -9.485289450100876, -3.3436431278192473, -3.2765165250554067, -8.515888892912773, -8.838662285175824, -1.6000286172989644, -9.485289450100876, -6.386016497606045, -3.3776593363506913, -5.838179408863235, -2.390903729100397, -3.2184339671253945, -9.485289450100876, -8.838662285175824, -9.580599629905201, -4.621257630196496, -8.299665784443137, -3.8671969118720093},
@@ -69,7 +70,7 @@ public class DGADetector {
             {-2.531179599331457, -6.00314605188182, -5.907835872077495, -4.694813232231641, -0.9292230185496455, -5.907835872077495, -6.00314605188182, -3.199785670975285, -2.3395844057521735, -6.00314605188182, -5.666673815260607, -3.886890537079268, -4.0016660516716955, -5.009894278871537, -1.7362497244615696, -6.00314605188182, -6.00314605188182, -6.00314605188182, -5.820824495087865, -5.907835872077495, -3.1183453390351104, -5.666673815260607, -5.907835872077495, -6.00314605188182, -4.568061526592497, -3.7731316517226094, -3.1699327078256037},
             {-2.1391027232585453, -3.120839066755946, -3.2055065209985045, -3.552215094494913, -3.8301145361996793, -3.252413323847759, -4.127115601441595, -2.7683496198244715, -2.739305380929777, -5.683438404671536, -5.260781996831157, -3.773583808395596, -3.343713764728033, -3.800100843982604, -2.6282891376899533, -3.36662774608745, -6.233077965863898, -3.679698888825022, -2.6975774183060213, -1.8443705253486264, -4.4631221175357245, -4.919749615503536, -2.7878010613137674, -7.815688636064855, -4.6839311457777, -8.475097676992949, -3.6438309580642136}
     };
-    private double threshold = 0.02393848376199023;
+    private final double threshold = 0.02393848376199023;
     private static DGADetector instance;
 
     private DGADetector(DatabaseHandler db) {
@@ -79,7 +80,6 @@ public class DGADetector {
 
     public static DGADetector getInstance(DatabaseHandler db) {
         if (instance == null) {
-            //instance = new GibberishDetector(con,"DGAmodel.txt");
             instance = new DGADetector(db);
         }
 
@@ -116,7 +116,7 @@ public class DGADetector {
         return nGram;
     }
 
-    private int[][] getAlphaBetCouplesMatrix(List<String> trainingLinesList) {
+/*    private int[][] getAlphaBetCouplesMatrix(List<String> trainingLinesList) {
         int[][] counts = createArray(alphabet.length());
         for (String line : trainingLinesList) {
             List<String> nGram = getNGram(2, line);
@@ -145,7 +145,7 @@ public class DGADetector {
             result.add(getAvgTransitionProbability(line, logProbabilityMatrix));
         }
         return result;
-    }
+    }*/
 
     private double getAvgTransitionProbability(String line, double[][] logProbabilityMatrix) {
         double logProb = 0d;
@@ -158,7 +158,7 @@ public class DGADetector {
         return Math.exp(logProb / Math.max(transitionCount, 1));
     }
 
-    private int[][] createArray(int length) {
+    /*private int[][] createArray(int length) {
         int[][] counts = new int[length][length];
         for (int i = 0; i < counts.length; i++) {
             Arrays.fill(counts[i], MIN_COUNT_VAL);
@@ -172,7 +172,7 @@ public class DGADetector {
             sum += array[i];
         }
         return sum;
-    }
+    }*/
 
     /**
      * determines if a sentence is gibberish or not.
@@ -207,19 +207,23 @@ public class DGADetector {
 
     public Result getResult(String domain) {
         String TAG = "getScore";
-        int domain_score = 30;
+        int domain_score;
         int cYear = Calendar.getInstance().get(Calendar.YEAR);
         int dYear = cYear;
         Result ret = new Result();
         ret.score = 0;
         ret.isDGA = false;
+        String sDomain = getDom(domain);
 
-        if (isDGA(domain)) {
-            domain_score = 30;
+        // TODO: check for cache if found return cache
+
+
+        if (isDGA(sDomain)) {
+            domain_score = 75;
             AsyncWHOIS task = new AsyncWHOIS();
 
             try {
-                dYear = task.execute(domain).get();
+                dYear = task.execute(sDomain).get();
                 if (dYear == 0) {
                     dYear = cYear;
                 }
@@ -229,28 +233,26 @@ public class DGADetector {
             }
             //WHOIS date range 0 - 1 year "0", 1-3 years "-10", 3-5 years "-20", >5 years "-30"
             if (((cYear - dYear) > 1) && ((cYear - dYear) <= 3)) {
-                domain_score -= 10;
-            } else if (((cYear - dYear) > 3) && ((cYear - dYear) <= 5)) {
                 domain_score -= 20;
+            } else if (((cYear - dYear) > 3) && ((cYear - dYear) <= 5)) {
+                domain_score -= 50;
             } else if ((cYear - dYear) > 5) {
-                domain_score -= 25;
+                domain_score -= 70;
             }
             ret.isDGA = true;
             ret.score += domain_score;
         }
 
-        //query if its bad domain, if yes +50
+        //query if its bad domain, if yes +100
+        //Sensitive NameServer if matches dynDNS, +15
+        //ASN if needed, if detect adobe and ASN does not correspond to adobe +30
         asyncAPI query = new asyncAPI();
         try {
-            int res = query.execute(domain).get();
+            int res = query.execute(sDomain).get();
             ret.score += res;
         } catch (Exception e) {
             e.printStackTrace();
         }
-        //Sensitive NameServer if matches dynDNS, +15
-
-        //ASN if needed, if detect adobe and ASN does not correspond to adobe +30
-
         return ret;
     }
 
@@ -291,17 +293,13 @@ public class DGADetector {
         return sbDomain.toString();
     }
 
-    private class AsyncWHOIS extends AsyncTask<String, Void, Integer> {
+    private static class AsyncWHOIS extends AsyncTask<String, Void, Integer> {
         String TAG = "AsyncWHOIS";
-        String[] ccTLDs = {"ac", "ad", "ae", "af", "ag", "ai", "al", "am", "ao", "aq", "ar", "as", "at", "au", "aw", "ax", "az", "ba", "bb", "bd", "be", "bf", "bg", "bh", "bi", "bj", "bm", "bn", "bo", "br", "bs", "bt", "bw", "by", "bz", "ca", "cc", "cd", "cf", "cg", "ch", "ci", "ck", "cl", "cm", "cn", "co", "cr", "cu", "cv", "cw", "cx", "cy", "cz", "de", "dj", "dk", "dm", "do", "dz", "ec", "ee", "eg", "er", "es", "et", "eu", "fi", "fj", "fk", "fm", "fo", "fr", "ga", "gd", "ge", "gf", "gg", "gh", "gi", "gl", "gm", "gn", "gp", "gq", "gr", "gs", "gt", "gu", "gw", "gy", "hk", "hm", "hn", "hr", "ht", "hu", "id", "ie", "il", "im", "in", "io", "iq", "ir", "is", "it", "je", "jm", "jo", "jp", "ke", "kg", "kh", "ki", "km", "kn", "kp", "kr", "kw", "ky", "kz", "la", "lb", "lc", "li", "lk", "lr", "ls", "lt", "lu", "lv", "ly", "ma", "mc", "md", "me", "mg", "mh", "mk", "ml", "mm", "mn", "mo", "mp", "mq", "mr", "ms", "mt", "mu", "mv", "mw", "mx", "my", "mz", "na", "nc", "ne", "nf", "ng", "ni", "nl", "no", "np", "nr", "nu", "nz", "om", "pa", "pe", "pf", "pg", "ph", "pk", "pl", "pm", "pn", "pr", "ps", "pt", "pw", "py", "qa", "re", "ro", "rs", "ru", "rw", "sa", "sb", "sc", "sd", "se", "sg", "sh", "si", "sk", "sl", "sm", "sn", "so", "sr", "ss", "st", "sv", "sx", "sy", "sz", "tc", "td", "tf", "tg", "th", "tj", "tk", "tl", "tm", "tn", "to", "tr", "tt", "tv", "tw", "tz", "ua", "ug", "uk", "us", "uy", "uz", "va", "vc", "ve", "vg", "vi", "vn", "vu", "wf", "ws", "ye", "yt", "za", "zm", "zw"};
-        String[] TLDs = {"com", "net", "org", "info", "biz", "io", "edu", "gov"};
-
 
         private int GetCreationDate(String domain) {
             String TAG = "getCreationDate";
             String next_hop;
             String[] tempbuf;
-            String cDate;
 
             Log.d(TAG, "Entered Function getCreationDate");
             WhoisClient whoisClient = new WhoisClient();
@@ -309,6 +307,7 @@ public class DGADetector {
             try {
                 whoisClient.connect("whois.iana.org", WhoisClient.DEFAULT_PORT);
                 String result = whoisClient.query(domain);
+                Log.d(TAG,"WHOIS result from iana.org" + result);
                 while (true) {
                     index = result.indexOf("refer:");
                     if (index != -1) {
@@ -322,6 +321,7 @@ public class DGADetector {
                         break;
                     }
                 }
+                Log.d(TAG,"Final WHOIS result: "+ result);
                 index = result.indexOf("Creation Date:");
                 if (index == -1) {
                     index = result.indexOf("created:");
@@ -346,49 +346,13 @@ public class DGADetector {
             }
         }
 
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
         @Override
         protected Integer doInBackground(String... params) {
             Log.i(TAG, "DomDetector - doInBackground");
-            String domain;
-            StringBuilder sbDomain = new StringBuilder();
-            String res_Domain;
-            String next_server;
-            int domainYear, currentYear;
+            int domainYear;
+            Log.d(TAG, params[0]);
 
-            String[] d = params[0].split("\\.");
-            if (d.length > 2) {
-                List<String> clist = Arrays.asList(ccTLDs);
-                List<String> tlist = Arrays.asList(TLDs);
-                if ((clist.contains(d[d.length - 1])) && ((tlist.contains(d[d.length - 2])))) {
-                    // last entry is ccTLD && 2nd last is a valid TLD
-                    sbDomain.append(d[d.length - 3]);
-                    sbDomain.append(".");
-                    sbDomain.append(d[d.length - 2]);
-                    sbDomain.append(".");
-                    sbDomain.append(d[d.length - 1]);
-                    // last entry is ccTLD && 2nd last is not a valid TLD
-                } else if ((clist.contains(d[d.length - 1])) && (!(tlist.contains(d[d.length - 2])))) {
-                    sbDomain.append(d[d.length - 2]);
-                    sbDomain.append(".");
-                    sbDomain.append(d[d.length - 1]);
-                } else {
-                    // last entry is not ccTLD
-                    sbDomain.append(d[d.length - 2]);
-                    sbDomain.append(".");
-                    sbDomain.append(d[d.length - 1]);
-                }
-            } else {
-                sbDomain.append(d[0]);
-                sbDomain.append(".");
-                sbDomain.append(d[1]);
-            }
-            Log.d(TAG, sbDomain.toString());
-
-            domainYear = GetCreationDate(sbDomain.toString());
+            domainYear = GetCreationDate(params[0]);
             Log.d(TAG, Integer.toString(domainYear));
             return domainYear;
         }
@@ -399,24 +363,19 @@ public class DGADetector {
         }
     }
 
-    private class asyncAPI extends AsyncTask<String, Void, Integer> {
+    private static class asyncAPI extends AsyncTask<String, Void, Integer> {
         String TAG = "asyncAPI";
 
-        @Override
-        protected Integer doInBackground(String... params) {
-            Log.d(TAG, "DomDetector (asyncAPI) - doInBackground");
-            Log.d(TAG, params[0]);
-            String domain = getDom(params[0]);
-
-            String addr = "https://api.apility.net/baddomain/" + domain;
-            String input;
-
+        private String getASN(String domainIP){
+            String TAG="asyncAPI - getASN";
             try {
+                String addr = "https://api.apility.net/v2.0/as/ip/" + domainIP;
                 URL dstURL = new URL(addr);
+                String input;
+
                 trustAllHosts();
                 HttpsURLConnection https = (HttpsURLConnection) dstURL.openConnection();
                 https.setHostnameVerifier(DO_NOT_VERIFY);
-                //http = https;
 
                 https.setRequestMethod("GET");
                 https.setRequestProperty("X-Auth-Token", "aae0d598-e46a-49e7-aab1-05195d8cddd3");
@@ -426,17 +385,98 @@ public class DGADetector {
                         new InputStreamReader(https.getInputStream()));
 
                 input = br.readLine();
+                br.close();
+                Log.d(TAG, "API return JSON: "+ input);
+                JSONObject mainObject = new JSONObject(input);
+                JSONObject asObj = mainObject.getJSONObject("as");
+                Log.d(TAG, "API return JSON: "+ asObj.toString());
+                return asObj.getString("asn");
+            }
+            catch(Exception e){
+                Log.d(TAG,"Error in getASN()");
+                Log.d(TAG,e.getCause()+" "+e.getMessage());
+                return "";
+            }
+
+        }
+        @Override
+        protected Integer doInBackground(String... params) {
+            String TAG ="asyncAPI - Background";
+            Log.d(TAG, "Looking up domain: " + params[0]);
+            String domain = params[0].toLowerCase();
+
+            String addr = "https://api.apility.net/baddomain/"+domain;
+            String input;
+            String[] googleASNs = {"36040", "45566", "41264", "36384", "22577", "36492", "15169"};
+            String[] adobeASNs = {"44786", "22786", "19238", "1313"};
+            String[] microsoftASNs = {"26222", "3598", "6182", "8068", "8075", "20046", "8072", "23468", "13811", "8069"};
+            String[] chaseASNs;
+            String[] wellsfargoASNs = {"4196", "10837"};
+            List<String> tempList;
+
+            try {
+                URL dstURL = new URL(addr);
+                trustAllHosts();
+                HttpsURLConnection https = (HttpsURLConnection) dstURL.openConnection();
+                https.setHostnameVerifier(DO_NOT_VERIFY);
+
+                https.setRequestMethod("GET");
+                https.setRequestProperty("X-Auth-Token", "aae0d598-e46a-49e7-aab1-05195d8cddd3");
+                https.setRequestProperty("Accept", "application/json");
+
+                BufferedReader br = new BufferedReader(
+                        new InputStreamReader(https.getInputStream()));
+
+                input = br.readLine();
+                br.close();
+
                 JSONObject mainObject = new JSONObject(input);
                 JSONObject respObj = mainObject.getJSONObject("response");
                 JSONObject domObj = respObj.getJSONObject("domain");
                 int dScore = Integer.parseInt(domObj.getString("score"));
                 if (dScore == -1) {
-                    dScore = 50;
+                    dScore = 100;
+                }
+                JSONArray nameServers = domObj.optJSONArray("ns");
+                for (int i=0; i< nameServers.length();i++){
+                    if ((nameServers.get(i).toString().toLowerCase().contains("no-ip.org")) ||
+                            (nameServers.get(i).toString().toLowerCase().contains("dyndns.org"))){
+
+                        Log.d(TAG,"Domain name server matches dynamic DNS domains: "+
+                                nameServers.get(i).toString().toLowerCase());
+                        dScore+=50;
+                    }
+                }
+                JSONObject ipObj = respObj.getJSONObject("ip");
+
+                if(domain.contains("google") || domain.contains("adobe") || domain.contains("microsoft")){
+                    Log.d(TAG,"Likely phishing domain found: "+ domain);
+                    String dASN = getASN(ipObj.getString("address"));
+                    Log.d(TAG,"domain: "+ domain + "ASN: "+dASN);
+                    if(domain.contains("google")){
+                        tempList = Arrays.asList(googleASNs);
+                        if(!tempList.contains(dASN)){
+                            //suspicious
+                            dScore+=80;
+                        }
+                    }else if (domain.contains("adobe")){
+                        tempList = Arrays.asList(adobeASNs);
+                        if(!tempList.contains(dASN)){
+                            //suspicious
+                            dScore+=80;
+                        }
+                    }else if (domain.contains("microsoft")){
+                        tempList = Arrays.asList(microsoftASNs);
+                        if(!tempList.contains(dASN)){
+                            //suspicious
+                            dScore+=80;
+                        }
+                    }
                 }
                 return dScore;
             } catch (Exception e) {
-                Log.d(TAG, "Exception occurred in asyncAPI - Background(Might be API server refuse connection");
-                // Log.d(TAG, e.getCause() + " " + e.getMessage());
+                Log.d(TAG,"Exception occurred in asyncAPI - Background");
+                Log.d(TAG, e.getCause() +" "+e.getMessage());
                 //e.printStackTrace();
             }
 
@@ -445,7 +485,6 @@ public class DGADetector {
 
         @Override
         protected void onPostExecute(Integer result) {
-            Log.i(TAG, "onPostExecute " + result.toString());
         }
 
         // always verify the host - dont check for certificate
@@ -460,6 +499,7 @@ public class DGADetector {
          */
         private void trustAllHosts() {
             // Create a trust manager that does not validate certificate chains
+            String TAG = "trustAllHost";
             TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
                 public java.security.cert.X509Certificate[] getAcceptedIssuers() {
                     return new java.security.cert.X509Certificate[]{};
@@ -481,7 +521,7 @@ public class DGADetector {
                 HttpsURLConnection
                         .setDefaultSSLSocketFactory(sc.getSocketFactory());
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.d(TAG,"Error setting SSLSocketFactory");
             }
         }
     }

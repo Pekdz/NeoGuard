@@ -19,6 +19,7 @@
 
 package ca.uwaterloo.crysp.privacyguard.Application.Network.FakeVPN;
 
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
@@ -31,6 +32,7 @@ import android.os.IBinder;
 import android.os.Parcel;
 import android.os.ParcelFileDescriptor;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import ca.uwaterloo.crysp.privacyguard.Application.ActionReceiver;
 import ca.uwaterloo.crysp.privacyguard.Application.Activities.AppSummaryActivity;
@@ -302,26 +304,37 @@ public class MyVpnService extends VpnService implements Runnable {
 
     void buildNotification(int notifyId, int frequency, LeakReport leak) {
         // TODO: build notification for suspicious domain and cryptominer detected
-        if (leak.category == LeakReport.LeakCategory.DOMAIN
-                || leak.category == LeakReport.LeakCategory.CRYPTOMINER) {
-            return;
+        String msg;
+        if (leak.category == LeakReport.LeakCategory.DOMAIN) {
+            msg = "Suspicious App: " + leak.metaData.appName + " is communicating to suspicious domains";
         }
+        else if (leak.category == LeakReport.LeakCategory.CRYPTOMINER){
+            msg = "Suspicious App: " + leak.metaData.appName + " is exhibiting cryptominer activities";
+        }
+        else if (leak.category == LeakReport.LeakCategory.SMS){
+            msg = "Suspicious App: " + leak.metaData.appName + " is exfiltrating your SMSes";
+        }
+        else {
 
-        int idx = leak.metaData.destHostName.lastIndexOf('.');
-        String destNetwork;
-        if (idx > 0)
-            idx = leak.metaData.destHostName.lastIndexOf('.', idx-1);
-        if (idx > -1)
-            destNetwork = leak.metaData.destHostName.substring(idx+1);
-        else
-            destNetwork = leak.metaData.destHostName;
+            int idx = leak.metaData.destHostName.lastIndexOf('.');
+            String destNetwork;
+            if (idx > 0)
+                idx = leak.metaData.destHostName.lastIndexOf('.', idx - 1);
+            if (idx > -1)
+                destNetwork = leak.metaData.destHostName.substring(idx + 1);
+            else
+                destNetwork = leak.metaData.destHostName;
 
-        String msg = "Leaking " + leak.category.name() + " to " + destNetwork;
+            msg = "Leaking " + leak.category.name() + " to " + destNetwork;
+        }
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
                         .setSmallIcon(R.drawable.ic_spam)
                         .setContentTitle(leak.metaData.appName)
                         .setContentText(msg).setNumber(frequency)
+                        .setPriority(NotificationCompat.PRIORITY_MAX)
+                        .setPriority(NotificationManager.IMPORTANCE_MAX)
+                        .setDefaults(Notification.DEFAULT_ALL)
                         .setTicker(msg)
                         .setAutoCancel(true);
 

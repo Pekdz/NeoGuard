@@ -45,6 +45,7 @@ public class DomainDetectionPlugin implements IPlugin {
 
                     if (result.isDGA || result.score > analyser.getScoreThresh()) {
                         // check packet record isn't saved to database
+
                         if (metaData.currentPacket.dbId == -1) {
                             metaData.currentPacket = db.addPacketRecord(httpReq);
                         }

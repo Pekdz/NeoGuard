@@ -1,7 +1,17 @@
 
-## PrivacyGuard 
+## NeoGuard 
 
-PrivacyGuard is an Android app that alerts you when one of your apps leaks sensitive information to a remote server. PrivacyGuard does not require a rooted phone. It detects leaks by having the network traffic of all apps go through a VPN. Note that the VPN runs entirely on your phone and your apps' traffic does not get sent to a remote VPN server. PrivacyGuard is described in more detail in this technical paper:
+NeoGuard is a network-based Android AntiVirus that alerts you when one of your apps doing suspicious behaviours. NeoGuard does not require a rooted phone. It utilizes Android VPN API to monitor all network traffic, including SSL traffic by MITM method.  
+
+The implementation is based on PrivacyGuard App, we add following additional functions:
+
+1. Domain analysis, DGA check and domain score calculation
+2. Cryptominer detection, only supports detect Coinhive signature
+3. SMS verification code leak detection
+4. Record the packet which triggers alert and use one page to show the packet detail(HTTP, Websocket, ...)
+
+
+PrivacyGuard is described in more detail in this technical paper:
 
 Y. Song and U. Hengartner. [PrivacyGuard: A VPN-based Platform to Detect Information Leakage on Android Devices.](https://dl.acm.org/citation.cfm?id=2808120&CFID=801061730&CFTOKEN=35254378) Proc. of 5th Annual CCS Workshop on Security and Privacy in Smartphones and Mobile Devices (SPSM 2015), Denver, CO, October 2015, pp. 15-26. 
 

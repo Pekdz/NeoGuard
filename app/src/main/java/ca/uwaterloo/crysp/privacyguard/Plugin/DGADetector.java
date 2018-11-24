@@ -40,6 +40,7 @@ public class DGADetector {
     private final Map<Character, Integer> alphabetPositionMap = new HashMap<>();
     private static final int MIN_COUNT_VAL = 10;
     private DatabaseHandler db;
+    private HashMap<String, Result> cache;
     private final String alphabet = "abcdefghijklmnopqrstuvwxyz ";
     private final double[][] logProbabilityMatrix = {
             {-8.569134847000806, -3.9369307938330933, -3.2206676967672974, -3.048245521037517, -6.052276597406203, -4.699558531819917, -3.994156130878688, -6.710404751666567, -3.245301640130125, -7.060737789080015, -4.512280893694204, -2.4997176870344004, -3.6426343157108727, -1.5707438146424084, -7.978466335723797, -3.893639344291984, -9.821897815496174, -2.3025259123500446, -2.348363959452305, -1.944862676264688, -4.539155660733608, -3.8718472941849895, -4.706356654533738, -6.560310872534923, -3.6497228572775398, -6.64195183699619, -2.7135048994495476},
@@ -76,19 +77,24 @@ public class DGADetector {
     private DGADetector(DatabaseHandler db) {
         initializePositionMap();
         this.db = db;
+        cache = db.getDomainCache();
     }
 
     public static DGADetector getInstance(DatabaseHandler db) {
         if (instance == null) {
             instance = new DGADetector(db);
         }
-
         return instance;
     }
 
     // can be overridden for another threshold heuristic implementation
     protected double getThreshold(double minGood, double maxBad) {
         return (minGood + maxBad) / 2;
+    }
+
+    private synchronized void updateCache(String domain, Result result) {
+        cache.put(domain, result);
+        db.addDomainCache(domain, result);
     }
 
     private void initializePositionMap() {
@@ -215,8 +221,11 @@ public class DGADetector {
         ret.isDGA = false;
         String sDomain = getDom(domain);
 
-        // TODO: check for cache if found return cache
-
+        // check for cache if found return cache
+        ret = cache.get(sDomain);
+        if (ret != null) {
+            return ret;
+        }
 
         if (isDGA(sDomain)) {
             domain_score = 75;
@@ -253,6 +262,10 @@ public class DGADetector {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        // update cache
+        updateCache(sDomain, ret);
+
         return ret;
     }
 
@@ -526,8 +539,8 @@ public class DGADetector {
         }
     }
 
-    class Result {
-        double score;
-        boolean isDGA;
+    public static class Result {
+        public double score;
+        public boolean isDGA;
     }
 }

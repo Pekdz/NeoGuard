@@ -7,9 +7,9 @@ import org.ejml.simple.SimpleMatrix;
 public class FlowAnalyzer {
     private static int D = 10;  // hidden unit count
     private static int M = 15;  // feature and bias count
-    private static double[][] meanTmp = {{0, 17242957.5991, 10.4651709402, 11.8658119658, 3620.8292735, 11670.4899573, 393.924145299, 3.29743589744,
-            294.190811966, 4.37136752137, 0.664743589744, 479.807264957, 146.178881081, 185.348869593, 94009.5929592}};
-    private static double[][] subTmp = {{1, 119988082, 8670, 2651, 12490948.0, 3762632.0, 1460.0, 1418.0, 1460.0, 1460.0, 315, 1460, 1260.56085106,
+    private static double[][] meanTmp = {{0, 15445394.2831, 9.71666009084, 10.867425135, 547.382239223, 17297.9665632, 932.70809605, 41.1206915745, 215.178012943, 18.8895722149,
+                                          128, 1017.11313299, 181.752887768, 316.252957767, 534072.612594}};
+    private static double[][] subTmp = {{1, 119988082, 8670, 2651, 12490948.0, 3762632.0, 1460.0, 1418.0, 1460.0, 1460.0, 1, 1460, 1260.56085106,
             799.674933958, 639480.0}};
 
     private static double[][] alphaTmp = new double[][]
@@ -92,16 +92,21 @@ public class FlowAnalyzer {
 	 */
 
     public boolean isBadFlow(List<Double> X) {
-        double[][] matrixX = new double[1][X.size() + 1];
-        matrixX[0][0] = 1.0;
-        for (int i = 1; i < X.size() + 1; i++) {
-            matrixX[0][i] = X.get(i - 1);
+        try {
+            double[][] matrixX = new double[1][X.size() + 1];
+            matrixX[0][0] = 1.0;
+            for (int i = 1; i < X.size() + 1; i++) {
+                matrixX[0][i] = X.get(i - 1);
+            }
+            SimpleMatrix n_X = Normalize(new SimpleMatrix(matrixX));
+            SimpleMatrix A = getA(n_X);
+            SimpleMatrix Z = sigmoid(A);
+            SimpleMatrix B = getB(Z, 2);
+            return B.get(0) <= B.get(1);
+        } catch(Exception e) {
+            return true;
         }
-        SimpleMatrix n_X = Normalize(new SimpleMatrix(matrixX));
-        SimpleMatrix A = getA(n_X);
-        SimpleMatrix Z = sigmoid(A);
-        SimpleMatrix B = getB(Z, 2);
-        return B.get(0) <= B.get(1);
+
     }
 
     /*public static void main(String[] args) {

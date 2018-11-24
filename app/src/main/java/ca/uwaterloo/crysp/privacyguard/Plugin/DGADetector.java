@@ -18,6 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.net.whois.WhoisClient;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javax.net.ssl.HostnameVerifier;
@@ -247,9 +248,6 @@ public class DGADetector {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
-
         return ret;
     }
 
@@ -304,6 +302,7 @@ public class DGADetector {
             try {
                 whoisClient.connect("whois.iana.org", WhoisClient.DEFAULT_PORT);
                 String result = whoisClient.query(domain);
+                Log.d(TAG,"WHOIS result from iana.org" + result);
                 while (true) {
                     index = result.indexOf("refer:");
                     if (index != -1) {
@@ -317,6 +316,7 @@ public class DGADetector {
                         break;
                     }
                 }
+                Log.d(TAG,"Final WHOIS result: "+ result);
                 index = result.indexOf("Creation Date:");
                 if (index == -1) {
                     index = result.indexOf("created:");
@@ -349,8 +349,6 @@ public class DGADetector {
         protected Integer doInBackground(String... params) {
             Log.i(TAG, "DomDetector - doInBackground");
             int domainYear;
-
-            //String[] d = params[0].split("\\.");
             Log.d(TAG, params[0]);
 
             domainYear = GetCreationDate(params[0]);
@@ -367,21 +365,16 @@ public class DGADetector {
     private class asyncAPI extends AsyncTask<String, Void, Integer> {
         String TAG = "asyncAPI";
 
-        @Override
-        protected Integer doInBackground(String... params) {
-            Log.d(TAG, "DomDetector (asyncAPI) - doInBackground");
-            Log.d(TAG, params[0]);
-            String domain = params[0];
-
-            String addr = "https://api.apility.net/baddomain/" + domain;
-            String input;
-
+        private String getASN(String domainIP){
+            String TAG="asyncAPI - getASN";
             try {
+                String addr = "https://api.apility.net/v2.0/as/ip/" + domainIP;
                 URL dstURL = new URL(addr);
+                String input;
+
                 trustAllHosts();
                 HttpsURLConnection https = (HttpsURLConnection) dstURL.openConnection();
                 https.setHostnameVerifier(DO_NOT_VERIFY);
-                //http = https;
 
                 https.setRequestMethod("GET");
                 https.setRequestProperty("X-Auth-Token", "aae0d598-e46a-49e7-aab1-05195d8cddd3");
@@ -391,6 +384,51 @@ public class DGADetector {
                         new InputStreamReader(https.getInputStream()));
 
                 input = br.readLine();
+                br.close();
+                Log.d(TAG, "API return JSON: "+ input);
+                JSONObject mainObject = new JSONObject(input);
+                JSONObject asObj = mainObject.getJSONObject("as");
+                Log.d(TAG, "API return JSON: "+ asObj.toString());
+                return asObj.getString("asn");
+            }
+            catch(Exception e){
+                Log.d(TAG,"Error in getASN()");
+                Log.d(TAG,e.getCause()+" "+e.getMessage());
+                return "";
+            }
+
+        }
+        @Override
+        protected Integer doInBackground(String... params) {
+            String TAG ="asyncAPI - Background";
+            Log.d(TAG, "Looking up domain: " + params[0]);
+            String domain = params[0].toLowerCase();
+
+            String addr = "https://api.apility.net/baddomain/"+domain;
+            String input;
+            String[] googleASNs = {"36040", "45566", "41264", "36384", "22577", "36492", "15169"};
+            String[] adobeASNs = {"44786", "22786", "19238", "1313"};
+            String[] microsoftASNs = {"26222", "3598", "6182", "8068", "8075", "20046", "8072", "23468", "13811", "8069"};
+            String[] chaseASNs;
+            String[] wellsfargoASNs = {"4196", "10837"};
+            List<String> tempList;
+
+            try {
+                URL dstURL = new URL(addr);
+                trustAllHosts();
+                HttpsURLConnection https = (HttpsURLConnection) dstURL.openConnection();
+                https.setHostnameVerifier(DO_NOT_VERIFY);
+
+                https.setRequestMethod("GET");
+                https.setRequestProperty("X-Auth-Token", "aae0d598-e46a-49e7-aab1-05195d8cddd3");
+                https.setRequestProperty("Accept", "application/json");
+
+                BufferedReader br = new BufferedReader(
+                        new InputStreamReader(https.getInputStream()));
+
+                input = br.readLine();
+                br.close();
+
                 JSONObject mainObject = new JSONObject(input);
                 JSONObject respObj = mainObject.getJSONObject("response");
                 JSONObject domObj = respObj.getJSONObject("domain");
@@ -398,12 +436,46 @@ public class DGADetector {
                 if (dScore == -1) {
                     dScore = 100;
                 }
-                domObj.getJSONArray("ns");
+                JSONArray nameServers = domObj.optJSONArray("ns");
+                for (int i=0; i< nameServers.length();i++){
+                    if ((nameServers.get(i).toString().toLowerCase().contains("no-ip.org")) ||
+                            (nameServers.get(i).toString().toLowerCase().contains("dyndns.org"))){
 
+                        Log.d(TAG,"Domain name server matches dynamic DNS domains: "+
+                                nameServers.get(i).toString().toLowerCase());
+                        dScore+=50;
+                    }
+                }
+                JSONObject ipObj = respObj.getJSONObject("ip");
+
+                if(domain.contains("google") || domain.contains("adobe") || domain.contains("microsoft")){
+                    Log.d(TAG,"Likely phishing domain found: "+ domain);
+                    String dASN = getASN(ipObj.getString("address"));
+                    Log.d(TAG,"domain: "+ domain + "ASN: "+dASN);
+                    if(domain.contains("google")){
+                        tempList = Arrays.asList(googleASNs);
+                        if(!tempList.contains(dASN)){
+                            //suspicious
+                            dScore+=80;
+                        }
+                    }else if (domain.contains("adobe")){
+                        tempList = Arrays.asList(adobeASNs);
+                        if(!tempList.contains(dASN)){
+                            //suspicious
+                            dScore+=80;
+                        }
+                    }else if (domain.contains("microsoft")){
+                        tempList = Arrays.asList(microsoftASNs);
+                        if(!tempList.contains(dASN)){
+                            //suspicious
+                            dScore+=80;
+                        }
+                    }
+                }
                 return dScore;
             } catch (Exception e) {
-                Log.d(TAG, "Exception occurred in asyncAPI - Background(Might be API server refuse connection");
-                // Log.d(TAG, e.getCause() + " " + e.getMessage());
+                Log.d(TAG,"Exception occurred in asyncAPI - Background");
+                Log.d(TAG, e.getCause() +" "+e.getMessage());
                 //e.printStackTrace();
             }
 
@@ -412,7 +484,6 @@ public class DGADetector {
 
         @Override
         protected void onPostExecute(Integer result) {
-            Log.i(TAG, "onPostExecute " + result.toString());
         }
 
         // always verify the host - dont check for certificate
@@ -427,6 +498,7 @@ public class DGADetector {
          */
         private void trustAllHosts() {
             // Create a trust manager that does not validate certificate chains
+            String TAG = "trustAllHost";
             TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
                 public java.security.cert.X509Certificate[] getAcceptedIssuers() {
                     return new java.security.cert.X509Certificate[]{};
@@ -448,7 +520,7 @@ public class DGADetector {
                 HttpsURLConnection
                         .setDefaultSSLSocketFactory(sc.getSocketFactory());
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.d(TAG,"Error setting SSLSocketFactory");
             }
         }
     }

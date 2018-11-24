@@ -228,31 +228,6 @@ public class DGADetector {
         ret.score = 0;
         ret.isDGA = false;
 
-        if (isDGA(sDomain)) {
-            domain_score = 75;
-            AsyncWHOIS task = new AsyncWHOIS();
-
-            try {
-                dYear = task.execute(sDomain).get();
-                if (dYear == 0) {
-                    dYear = cYear;
-                }
-                Log.d(TAG, Integer.toString(dYear));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            //WHOIS date range 0 - 1 year "0", 1-3 years "-10", 3-5 years "-20", >5 years "-30"
-            if (((cYear - dYear) > 1) && ((cYear - dYear) <= 3)) {
-                domain_score -= 20;
-            } else if (((cYear - dYear) > 3) && ((cYear - dYear) <= 5)) {
-                domain_score -= 50;
-            } else if ((cYear - dYear) > 5) {
-                domain_score -= 70;
-            }
-            ret.isDGA = true;
-            ret.score += domain_score;
-        }
-
         //query if its bad domain, if yes +100
         //Sensitive NameServer if matches dynDNS, +15
         //ASN if needed, if detect adobe and ASN does not correspond to adobe +30
@@ -260,8 +235,35 @@ public class DGADetector {
         try {
             int res = query.execute(sDomain).get();
             ret.score += res;
+            if (res == 100){
+                return ret;
+            }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+
+        if (isDGA(sDomain)) {
+            //domain_score = 75;
+            ret.score+=75;
+            ret.isDGA = true;
+        }
+        AsyncWHOIS task = new AsyncWHOIS();
+        try {
+            dYear = task.execute(sDomain).get();
+            if (dYear == 0) {
+                dYear = cYear;
+            }
+            Log.d(TAG, Integer.toString(dYear));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+         //WHOIS date range 0 - 1 year "0", 1-3 years "-10", 3-5 years "-20", >5 years "-30"
+        if (((cYear - dYear) > 1) && ((cYear - dYear) <= 3)) {
+            ret.score -= 20;
+        }else if (((cYear - dYear) > 3) && ((cYear - dYear) <= 5)) {
+            ret.score -= 50;
+        } else if ((cYear - dYear) > 5) {
+            ret.score -= 70;
         }
 
         // update cache
@@ -450,40 +452,41 @@ public class DGADetector {
                 dScore = Integer.parseInt(domObj.getString("score"));
                 if (dScore == -1) {
                     dScore = 100;
-                }
-                JSONArray nameServers = domObj.optJSONArray("ns");
-                for (int i=0; i< nameServers.length();i++){
-                    if ((nameServers.get(i).toString().toLowerCase().contains("no-ip.org")) ||
-                            (nameServers.get(i).toString().toLowerCase().contains("dyndns.org"))){
+                }else {
+                    JSONArray nameServers = domObj.optJSONArray("ns");
+                    for (int i = 0; i < nameServers.length(); i++) {
+                        if ((nameServers.get(i).toString().toLowerCase().contains("no-ip.org")) ||
+                                (nameServers.get(i).toString().toLowerCase().contains("dyndns.org"))) {
 
-                        Log.d(TAG,"Domain name server matches dynamic DNS domains: "+
-                                nameServers.get(i).toString().toLowerCase());
-                        dScore+=50;
+                            Log.d(TAG, "Domain name server matches dynamic DNS domains: " +
+                                    nameServers.get(i).toString().toLowerCase());
+                            dScore += 50;
+                        }
                     }
-                }
-                JSONObject ipObj = respObj.getJSONObject("ip");
+                    JSONObject ipObj = respObj.getJSONObject("ip");
 
-                if(domain.contains("google") || domain.contains("adobe") || domain.contains("microsoft")){
-                    Log.d(TAG,"Likely phishing domain found: "+ domain);
-                    String dASN = getASN(ipObj.getString("address"));
-                    Log.d(TAG,"domain: "+ domain + "ASN: "+dASN);
-                    if(domain.contains("google")){
-                        tempList = Arrays.asList(googleASNs);
-                        if(!tempList.contains(dASN)){
-                            //suspicious
-                            dScore+=80;
-                        }
-                    }else if (domain.contains("adobe")){
-                        tempList = Arrays.asList(adobeASNs);
-                        if(!tempList.contains(dASN)){
-                            //suspicious
-                            dScore+=80;
-                        }
-                    }else if (domain.contains("microsoft")){
-                        tempList = Arrays.asList(microsoftASNs);
-                        if(!tempList.contains(dASN)){
-                            //suspicious
-                            dScore+=80;
+                    if (domain.contains("google") || domain.contains("adobe") || domain.contains("microsoft")) {
+                        Log.d(TAG, "Likely phishing domain found: " + domain);
+                        String dASN = getASN(ipObj.getString("address"));
+                        Log.d(TAG, "domain: " + domain + "ASN: " + dASN);
+                        if (domain.contains("google")) {
+                            tempList = Arrays.asList(googleASNs);
+                            if (!tempList.contains(dASN)) {
+                                //suspicious
+                                dScore += 80;
+                            }
+                        } else if (domain.contains("adobe")) {
+                            tempList = Arrays.asList(adobeASNs);
+                            if (!tempList.contains(dASN)) {
+                                //suspicious
+                                dScore += 80;
+                            }
+                        } else if (domain.contains("microsoft")) {
+                            tempList = Arrays.asList(microsoftASNs);
+                            if (!tempList.contains(dASN)) {
+                                //suspicious
+                                dScore += 80;
+                            }
                         }
                     }
                 }

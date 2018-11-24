@@ -27,6 +27,9 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import ca.uwaterloo.crysp.privacyguard.Application.Database.DatabaseHandler;
+
+
 /**
  * Class is largely based on  gibberish detector used to train and classify sentences as gibberish or not.
  *
@@ -35,7 +38,7 @@ import javax.net.ssl.X509TrustManager;
 public class DGADetector {
     private final Map<Character, Integer> alphabetPositionMap = new HashMap<>();
     private static final int MIN_COUNT_VAL = 10;
-
+    private DatabaseHandler db;
     private final String alphabet = "abcdefghijklmnopqrstuvwxyz ";
     private double[][] logProbabilityMatrix = {
             {-8.569134847000806, -3.9369307938330933, -3.2206676967672974, -3.048245521037517, -6.052276597406203, -4.699558531819917, -3.994156130878688, -6.710404751666567, -3.245301640130125, -7.060737789080015, -4.512280893694204, -2.4997176870344004, -3.6426343157108727, -1.5707438146424084, -7.978466335723797, -3.893639344291984, -9.821897815496174, -2.3025259123500446, -2.348363959452305, -1.944862676264688, -4.539155660733608, -3.8718472941849895, -4.706356654533738, -6.560310872534923, -3.6497228572775398, -6.64195183699619, -2.7135048994495476},
@@ -69,14 +72,17 @@ public class DGADetector {
     private double threshold = 0.02393848376199023;
     private static DGADetector instance;
 
-    private DGADetector() {
+    private DGADetector(DatabaseHandler db) {
         initializePositionMap();
+        this.db = db;
     }
 
-    public static DGADetector getInstance() {
-        if (instance == null)
+    public static DGADetector getInstance(DatabaseHandler db) {
+        if (instance == null) {
             //instance = new GibberishDetector(con,"DGAmodel.txt");
-            instance = new DGADetector();
+            instance = new DGADetector(db);
+        }
+
         return instance;
     }
 

@@ -9,28 +9,30 @@ import ca.uwaterloo.crysp.privacyguard.Application.Logger;
 public class FlowStats {
     private static final String TAG = FlowStats.class.getSimpleName();
     private long startTime;
-    private ArrayList<Integer> fwdPktList;
-    private ArrayList<Integer> backPktList;
+    private ArrayList<Double> fwdPktList;
+    private ArrayList<Double> backPktList;
 
-    long duration; // ms
+    private double duration; // ms
 
-    int totalNum;
-    int fwdPktNum;
-    int backPktNum;
+    private double totalNum;
+    private double fwdPktNum;
+    private double backPktNum;
 
-    int totalLen; // byte
-    int backTotalLen;
-    int fwdTotalLen;
+    private double totalLen; // byte
+    private double backTotalLen;
+    private double fwdTotalLen;
 
-    int fwdPktMaxLen;
-    int fwdPktMinLen;
-    int backPktMaxLen;
-    int backPktMinLen;
+    private double pktMaxLen;
+    private double pktMinLen;
+    private double fwdPktMaxLen;
+    private double fwdPktMinLen;
+    private double backPktMaxLen;
+    private double backPktMinLen;
 
-    float pktLenMean;
-    float pktLenStd;
-    float pktLenVar;
-    float pktLenMid;
+    private double pktLenMean;
+    private double pktLenStd;
+    private double pktLenVar;
+    private double pktLenMid;
 
     public FlowStats() {
         startTime = System.currentTimeMillis();
@@ -42,6 +44,8 @@ public class FlowStats {
         backPktNum = 0;
         totalLen = 0;
         backTotalLen = 0;
+        pktMaxLen = 0;
+        pktMinLen = 0;
         fwdTotalLen = 0;
         fwdPktMaxLen = 0;
         fwdPktMinLen = 0;
@@ -53,15 +57,15 @@ public class FlowStats {
         pktLenMid = 0;
     }
 
-    public void addFwdPkt(int pktLen) {
+    public void addFwdPkt(double pktLen) {
         fwdPktList.add(pktLen);
     }
 
-    public void addBackPkt(int pktLen) {
+    public void addBackPkt(double pktLen) {
         backPktList.add(pktLen);
     }
 
-    public void calculate() {
+    public List<Double> calculate() {
         duration = System.currentTimeMillis() - startTime;
 
         Collections.sort(backPktList);
@@ -72,30 +76,63 @@ public class FlowStats {
         totalNum = fwdPktNum + backPktNum;
 
         if (totalNum == 0) {
-            return;
+            return null;
         }
 
-        fwdPktMaxLen = fwdPktNum > 0 ? fwdPktList.get(fwdPktNum - 1) : 0;
+        fwdPktMaxLen = fwdPktNum > 0 ? fwdPktList.get((int)fwdPktNum - 1) : 0;
         fwdPktMinLen = fwdPktNum > 0  ? fwdPktList.get(0) : 0;
-        backPktMaxLen = backPktNum > 0 ? backPktList.get(backPktNum - 1) : 0;
+        backPktMaxLen = backPktNum > 0 ? backPktList.get((int)backPktNum - 1) : 0;
         backPktMinLen = backPktNum > 0 ? backPktList.get(0) : 0;
+        if (fwdPktNum == 0) {
+            pktMaxLen = backPktMaxLen;
+            pktMinLen = backPktMinLen;
+        } else if (backPktNum == 0) {
+            pktMaxLen = fwdPktMaxLen;
+            pktMinLen = fwdPktMinLen;
+        } else  {
+            pktMaxLen = fwdPktMaxLen >= backPktMaxLen ? fwdPktMaxLen : backPktMaxLen;
+            pktMinLen = fwdPktMinLen <= backPktMinLen ? fwdPktMinLen : backPktMinLen;
+        }
 
         fwdTotalLen = sum(fwdPktList);
         backTotalLen = sum(backPktList);
         totalLen = fwdTotalLen + backTotalLen;
 
-        List<Integer> pktList = merged(fwdPktList, backPktList);
+        List<Double> pktList = merged(fwdPktList, backPktList);
         pktLenMean = totalLen / totalNum;
         pktLenVar = getVariance(pktLenMean, pktList);
         pktLenStd = (float) Math.sqrt(pktLenVar);
         pktLenMid = getMedian(pktList);
 
-        Logger.d(TAG, this.toString());
+        // Logger.d(TAG, this.toString());
+        /*
+          'Flow Duration', 'Total Fwd Packets', 'Total Backward Packets',
+          'Total Length of Fwd Packets', 'Total Length of Bwd Packets',
+          'Bwd Packet Length Max', 'Bwd Packet Length Min', 'Fwd Packet Length Max',
+          'Fwd Packet Length Min', 'Min Packet Length', 'Max Packet Length',
+          'Packet Length Mean', 'Packet Length Std', 'Packet Length Variance'
+         */
+        ArrayList<Double> paramList = new ArrayList<>();
+        paramList.add(duration);
+        paramList.add(fwdPktNum);
+        paramList.add(backPktNum);
+        paramList.add(fwdTotalLen);
+        paramList.add(backTotalLen);
+        paramList.add(backPktMaxLen);
+        paramList.add(backPktMinLen);
+        paramList.add(fwdPktMaxLen);
+        paramList.add(fwdPktMinLen);
+        paramList.add(pktMinLen);
+        paramList.add(pktMaxLen);
+        paramList.add(pktLenMean);
+        paramList.add(pktLenStd);
+        paramList.add(pktLenVar);
+        return paramList;
     }
 
     @Override
     public String toString() {
-        return "FlowStats {" +
+        return "FlowStats{" +
                 "duration=" + duration +
                 ", totalNum=" + totalNum +
                 ", fwdPktNum=" + fwdPktNum +
@@ -103,6 +140,8 @@ public class FlowStats {
                 ", totalLen=" + totalLen +
                 ", backTotalLen=" + backTotalLen +
                 ", fwdTotalLen=" + fwdTotalLen +
+                ", pktMaxLen=" + pktMaxLen +
+                ", pktMinLen=" + pktMinLen +
                 ", fwdPktMaxLen=" + fwdPktMaxLen +
                 ", fwdPktMinLen=" + fwdPktMinLen +
                 ", backPktMaxLen=" + backPktMaxLen +
@@ -114,17 +153,22 @@ public class FlowStats {
                 '}';
     }
 
-    private int sum(List<Integer> list) {
-        int sum = 0;
-        for (int i : list)
+    private double sum(List<Double> list) {
+        double sum = 0;
+        for (double i : list)
             sum = sum + i;
         return sum;
     }
 
-    private static List<Integer> merged(List<Integer> left, List<Integer> right) {
+    private static List<Double> merged(List<Double> left, List<Double> right) {
+        if (left.isEmpty())
+            return right;
+        else if (right.isEmpty())
+            return left;
+
         int leftIndex = 0;
         int rightIndex = 0;
-        List<Integer> merged = new ArrayList<>();
+        List<Double> merged = new ArrayList<>();
 
         while (leftIndex < left.size() && rightIndex < right.size()) {
             if (left.get(leftIndex) < right.get(rightIndex)) {
@@ -138,17 +182,17 @@ public class FlowStats {
         return merged;
     }
 
-    private float getVariance(float mean, List<Integer> list) {
-        float temp = 0;
-        for(float a : list)
+    private double getVariance(double mean, List<Double> list) {
+        double temp = 0;
+        for(double a : list)
             temp += (a-mean)*(a-mean);
         return temp/(list.size() - 1);
     }
 
 
-    private float getMedian(List<Integer> list) {
+    private double getMedian(List<Double> list) {
         if (list.size() % 2 == 0)
-            return (float) ((list.get((list.size() / 2) - 1) + list.get(list.size() / 2)) / 2.0);
+            return (list.get((list.size() / 2) - 1) + list.get(list.size() / 2)) / 2.0;
         return list.get(list.size() / 2);
     }
 }

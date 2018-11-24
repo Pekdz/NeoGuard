@@ -24,6 +24,7 @@ import ca.uwaterloo.crysp.privacyguard.Application.Network.ConnectionMetaData;
 import ca.uwaterloo.crysp.privacyguard.Application.Network.DPI;
 import ca.uwaterloo.crysp.privacyguard.Application.Network.FakeVPN.MyVpnService;
 import ca.uwaterloo.crysp.privacyguard.Application.Network.FilterThread;
+import ca.uwaterloo.crysp.privacyguard.Application.Network.FlowAnalyzer;
 import ca.uwaterloo.crysp.privacyguard.Application.Network.FlowStats;
 import ca.uwaterloo.crysp.privacyguard.Application.PrivacyGuard;
 
@@ -32,6 +33,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Arrays;
+import java.util.List;
 
 public class LocalServerForwarder extends Thread {
 
@@ -92,7 +94,13 @@ public class LocalServerForwarder extends Thread {
             if (DEBUG) Logger.d(TAG, "Stop forwarding " + clientSocket.getInetAddress().getHostAddress()+ ":" + clientSocket.getPort() + "<->" + serverSocket.getInetAddress().getHostAddress() + ":" + serverSocket.getPort());
 
             // TODO: End of a flow, can write flow statistics to database
-            flowStats.calculate();
+            List<Double> paramList = flowStats.calculate();
+            if (paramList != null) {
+                boolean flowIsBad = FlowAnalyzer.getInstance().isBadFlow(paramList);
+                Logger.i(TAG, flowStats.toString());
+                Logger.i(TAG, "Input params list => " + Arrays.toString(paramList.toArray()));
+                Logger.i(TAG, "Flow is bad => " + flowIsBad);
+            }
 
             clientSocket.close();
             serverSocket.close();

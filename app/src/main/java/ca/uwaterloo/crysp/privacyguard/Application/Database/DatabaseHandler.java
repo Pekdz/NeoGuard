@@ -9,6 +9,7 @@ import android.util.Patterns;
 
 import ca.uwaterloo.crysp.privacyguard.Application.Logger;
 import ca.uwaterloo.crysp.privacyguard.Plugin.CryptominerInstance;
+import ca.uwaterloo.crysp.privacyguard.Plugin.DGADetector;
 import ca.uwaterloo.crysp.privacyguard.Plugin.DomainInstance;
 import ca.uwaterloo.crysp.privacyguard.Plugin.LeakInstance;
 import ca.uwaterloo.crysp.privacyguard.Plugin.LeakReport;
@@ -18,10 +19,13 @@ import ca.uwaterloo.crysp.privacyguard.Plugin.TrafficReport;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
 
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
@@ -82,6 +86,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.execSQL(CREATE_PACKET_TABLE);
         db.execSQL(CREATE_DOMAIN_TABLE);
         db.execSQL(CREATE_CRYPTO_TABLE);
+        db.execSQL(CREATE_DOMAINSCORE_TABLE);
     }
 
     // Upgrading database
@@ -96,6 +101,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_PACKET);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_DOMAIN_ALERT);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_CRYPTO_ALERT);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_DOMAIN_CACHE);
         // Create tables again
         onCreate(db);
     }
@@ -211,6 +217,17 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             + KEY_CRYPTO_SIGNATURE + " TEXT,"
             + KEY_TIME_STAMP + " TEXT,"
             + KEY_CRYPTO_DOMAINISPOOL + " TEXT)";
+
+    // Cyptominer alert table
+    private static final String TABLE_DOMAIN_CACHE = "domain_cache";
+    private static final String KEY_DOMAIN_CACHE_KEY = "domain";
+    private static final String KEY_DOMAIN_CACHE_ISGDA = "isdga";
+    private static final String KEY_DOMAIN_CACHE_SCORE = "score";
+    private static final String CREATE_DOMAINSCORE_TABLE = "CREATE TABLE " + TABLE_DOMAIN_CACHE + "("
+            + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+            + KEY_DOMAIN_CACHE_KEY + " TEXT,"
+            + KEY_DOMAIN_CACHE_ISGDA + " INTEGER,"
+            + KEY_DOMAIN_CACHE_SCORE + " INTEGER)";
 
     // Traffic summary table
     private static final String TABLE_TRAFFIC_SUMMARY = "traffic_summary";
@@ -369,6 +386,32 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             cursor.close();
         }
         return record;
+    }
+
+    public void addDomainCache(String domain, DGADetector.Result result) {
+        ContentValues values = new ContentValues();
+        values.put(KEY_DOMAIN_CACHE_KEY, domain);
+        values.put(KEY_DOMAIN_CACHE_SCORE, result.score);
+        int isdga = result.isDGA ? 1 : 0;
+        values.put(KEY_DOMAIN_CACHE_SCORE, isdga);
+        mDB.insert(TABLE_PACKET, null, values);
+    }
+
+    public HashMap<String, DGADetector.Result> getDomainCache() {
+        HashMap<String, DGADetector.Result> cache = new HashMap<>();
+        Cursor cursor = mDB.query(TABLE_DOMAIN_CACHE, new String[]{KEY_DOMAIN_CACHE_KEY, KEY_DOMAIN_CACHE_SCORE, KEY_DOMAIN_CACHE_ISGDA}, null, null, null, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                do {
+                    DGADetector.Result result = new DGADetector.Result();
+                    result.score = cursor.getInt(1);
+                    result.isDGA = cursor.getInt(2) == 1;
+                    cache.put(cursor.getString(0), result);
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
+        }
+        return cache;
     }
 
     public void deletePackage(String packageName) {

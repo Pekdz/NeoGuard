@@ -87,7 +87,7 @@ public class DomainDetectionPlugin implements IPlugin {
     @Override
     public void setContext(Context context) {
         db = DatabaseHandler.getInstance(context);
-        analyser = DGADetector.getInstance();
+        analyser = DGADetector.getInstance(db);
         commonFileSet = new HashSet<>(Arrays.asList("js", "html", "css", "svg", "gif", "png", "jpg", "woff2"));
     }
 }

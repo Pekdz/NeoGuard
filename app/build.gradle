@@ -26,6 +26,7 @@ android {
 }
 
 dependencies {
+    implementation files('libs/iaik_jce.jar')
     implementation files('libs/bc.jar')
     implementation files('libs/bsf-2.3.0.jar')
     implementation files('libs/bsh-2.0b4.jar')
@@ -43,4 +44,5 @@ dependencies {
     implementation "org.java-websocket:Java-WebSocket:1.3.9"
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
     implementation  group: 'commons-net', name: 'commons-net', version: '3.6'
+    implementation  group: 'org.ejml', name: 'simple', version: '0.27'
 }

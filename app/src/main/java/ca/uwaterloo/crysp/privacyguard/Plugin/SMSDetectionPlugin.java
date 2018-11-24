@@ -22,10 +22,10 @@ import ca.uwaterloo.crysp.privacyguard.Application.Network.ConnectionMetaData;
 
 public class SMSDetectionPlugin extends BroadcastReceiver implements IPlugin {
     private final String TAG = "SMSDetectionPlugin";
-    private final boolean DEBUG = false;
+    private final boolean DEBUG = true;
     private static boolean init = false;
-    private DatabaseHandler db;
-    private HashSet<String> smsList = new HashSet<>();
+    private static DatabaseHandler db;
+    private static final HashSet<String> smsList = new HashSet<>();
 
     @Override
     @Nullable
@@ -40,6 +40,8 @@ public class SMSDetectionPlugin extends BroadcastReceiver implements IPlugin {
                         refPacketId = db.addPacketRecord(metaData.currentPacket).dbId;
                     }
                     leaks.add(new LeakInstance("Leak Verification Code", sms_code, refPacketId));
+                    if (DEBUG)
+                        Logger.i(TAG, "SMS Leak => " + sms_code);
                 }
             }
             if (leaks.isEmpty()) {
@@ -72,7 +74,6 @@ public class SMSDetectionPlugin extends BroadcastReceiver implements IPlugin {
     public void setContext(Context context) {
         synchronized (smsList) {
             if (init) return;
-
             db = DatabaseHandler.getInstance(context);
             init = true;
             getSMS(context.getContentResolver());
@@ -84,13 +85,21 @@ public class SMSDetectionPlugin extends BroadcastReceiver implements IPlugin {
         try {
             sms = cr.query(Uri.parse("content://sms/inbox"),
                     null, null, null, null);
+            int totalSMS = sms.getCount();
             if (sms.moveToFirst()) { // must check the result to prevent exception
                 do {
-                    for (int idx = 0; idx < sms.getColumnCount(); idx++) {
-                        String code = extractCode(sms.getString(idx));
-                        if (code != null) {
-                            smsList.add(code);
+                    String msgData = "";
+                    for(int idx=0;idx<sms.getColumnCount();idx++)
+                    {
+                        String name = sms.getColumnName(idx);
+                        String sub_body = sms.getString(idx);
+                        if(name.contains("body")) {
+                            msgData = sub_body;
                         }
+                    }
+                    String code = extractCode(msgData);
+                    if (code != null) {
+                        smsList.add(code);
                     }
                 } while (sms.moveToNext());
             }
@@ -104,7 +113,7 @@ public class SMSDetectionPlugin extends BroadcastReceiver implements IPlugin {
     }
 
     public static String extractCode(String Body) {
-        if (!Body.contains("code"))
+        if (!Body.contains("Code"))
             return null;
 
         Pattern pattern = Pattern.compile("(\\d{4,6})");

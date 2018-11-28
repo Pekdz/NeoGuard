@@ -257,7 +257,7 @@ public class DGADetector {
         } catch (Exception e) {
             e.printStackTrace();
         }
-         //WHOIS date range 0 - 1 year "0", 1-3 years "-10", 3-5 years "-20", >5 years "-30"
+         //WHOIS date range 0 - 1 year "0", 1-3 years "-20", 3-5 years "-50", >5 years "-70"
         if (((cYear - dYear) > 1) && ((cYear - dYear) <= 3)) {
             ret.score -= 20;
         }else if (((cYear - dYear) > 3) && ((cYear - dYear) <= 5)) {
@@ -449,8 +449,10 @@ public class DGADetector {
                 JSONObject mainObject = new JSONObject(input);
                 JSONObject respObj = mainObject.getJSONObject("response");
                 JSONObject domObj = respObj.getJSONObject("domain");
-                dScore = Integer.parseInt(domObj.getString("score"));
-                if (dScore == -1) {
+                String type = mainObject.getString("type");
+                dScore = Integer.parseInt(respObj.getString("score"));
+
+                if((dScore == -1) || type.equalsIgnoreCase("baddomain")){
                     dScore = 100;
                 }else {
                     JSONArray nameServers = domObj.optJSONArray("ns");
